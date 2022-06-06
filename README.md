@@ -1,2 +1,2 @@
 # EconGame
-Personal game dev project that is economics inspired.
+An economics inspired Personal game dev project.
