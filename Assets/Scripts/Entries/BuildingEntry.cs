@@ -20,7 +20,23 @@ public class BuildingEntry
     float averageIngredientCost;
 
     float productionStockpile;
+
+    int lastSales;
     
+    public void setIngredientStockpile(int amount)
+    {
+        ingredientStockpile += amount;
+
+        if(ingredientStockpile > level * 2)
+        {
+            ingredientStockpile = level * 2;
+        }
+        if(ingredientStockpile < 0)
+        {
+            ingredientStockpile = 0;
+        }
+    }
+
     public string getID()
     {
         return ID;
@@ -71,7 +87,12 @@ public class BuildingEntry
         return productionStockpile;
     }
 
-    public BuildingEntry(string iD, string province, int type, float budget = 0, float wage = 0, int ingredientStockpile = 0, float premium = 0, int level = 1, float productionStockpile = 0, float averageIngredientCost = 0)
+    public int getLastSales()
+    {
+        return lastSales;
+    }
+
+    public BuildingEntry(string iD, string province, int type, float budget = 0, float wage = 0, int ingredientStockpile = 0, float premium = 0, int level = 1, float productionStockpile = 0, float averageIngredientCost = 0, int lastSales = 0)
     {
         ID = iD;
         this.province = province;
@@ -83,5 +104,6 @@ public class BuildingEntry
         this.level = level;
         this.productionStockpile = productionStockpile;
         this.averageIngredientCost = averageIngredientCost;
+        this.lastSales = lastSales;
     }
 }

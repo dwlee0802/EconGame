@@ -7,171 +7,21 @@ using System.IO;
 
 /* Current Status
  * -Need to come up with how to change parameters for next day
- * -Make people output more buy orders. Probably 4 will be enough.
+ * -More efficient best good selection
+ * -refund resources for unsold stuff
  */
 
 public class GameManager : MonoBehaviour
 {
+    UIManager uiManager;
+    bool poorFirst = true;
+
     // Start is called before the first frame update
     void Start()
     {
-        PeopleQueries.RemovePerson("PP8");
-        /*
-        string dbname = "GameDatabase.db";
-        string currentPath = System.IO.Path.GetDirectoryName(Application.dataPath);
-        currentPath = currentPath + "\\" + dbname;
+        uiManager = GetComponent<UIManager>();
 
-        Debug.Log("Database file path: " + currentPath);
-
-        dbConnection = new SqliteConnection("URI=file:" + currentPath);
-        dbConnection.Open();
-
-        if (dbConnection.State == ConnectionState.Open)
-        {
-            Debug.Log("Connection SUCCESS");
-        }
-        else
-        {
-            Debug.Log("Connection FAILED");
-        }
-
-        dbConnection.Close();
-        */
-
-        //dbReader.NextResult();
-
-        /*
-        dbReader.Close();
-        dbReader = null;
-        dbCommand.Dispose();
-        dbCommand = null;
-        dbConnection.Close();
-        dbConnection = null;
-        */
-
-
-        /*
-        //testing
-        Debug.Log("Testing GetProvinceIDs");
-        foreach (string item in GetProvinceIDs())
-        {
-            Debug.Log(item);
-        }
-
-
-        Debug.Log("Testing GetPersonIDs");
-        foreach (string item in GetProvinceIDs())
-        {
-            Debug.Log("Person ID in province " + item);
-
-            foreach (string personID in GetPersonIDs(item))
-            {
-                Debug.Log(personID);
-            }
-        }
-
-
-        Debug.Log("Test people count");
-
-        Debug.Log("There are total of " + int.Parse(ReadDatabase("SELECT COUNT(ID) FROM People").GetValue(0).ToString()) + " People living in the game world");
-
-        Debug.Log("Testing GetBuildingIDs");
-        foreach (string item in GetProvinceIDs())
-        {
-            Debug.Log("Building ID in province " + item);
-
-            foreach (string buildingID in GetBuildingIDs(item))
-            {
-                Debug.Log(buildingID);
-            }
-        }
-
-
-        Debug.Log("Testing Best Good"); 
-        foreach (string provinceID in GetProvinceIDs())
-        {
-            Debug.Log("The people living in province " + provinceID);
-
-            foreach (string personID in GetPersonIDs(provinceID))
-            {
-                IDataReader dbReader = ReadDatabase("SELECT * FROM People WHERE ID = \'" + personID + "\'");
-
-                if (dbReader.Read())
-                {
-                    Debug.Log(personID + "'s health is " + dbReader.GetInt32(3).ToString() + " and happiness is " + dbReader.GetInt32(4).ToString() + ". It wants " + GoodsManager.TypeToNameDict[GoodsManager.CalculateBestGood(dbReader.GetInt32(3), dbReader.GetInt32(4))]);
-                }
-            }
-        }
-        */
-        /*
-        Debug.Log("Testing Buy Order");
-        foreach (string provinceID in GetProvinceIDs())
-        {
-            Debug.Log("The people living in province " + provinceID);
-
-            foreach (string personID in GetPersonIDs(provinceID))
-            {
-                    Debug.Log(personID + " wants " + GenerateBuyOrderPerson(PeopleQueries.GetPerson(personID)));
-            }
-        }
-        /*
-       
-        Debug.Log("Testing Sell Order");
-        foreach (string provinceID in GetProvinceIDs())
-        {
-            Debug.Log("The buildings in province " + provinceID);
-
-            foreach (var building in BuildingsQueries.GetAllBuildings(provinceID))
-            {
-                Debug.Log("Generating for buildingID " + building.getID() + ". It has " + PeopleQueries.GetEmployeeCount(building.getID()) + " employees.");
-
-                foreach(var item in GenerateSellOrder(building))
-                {
-                    Debug.Log(building.getID() + " wants to sell " + item);
-                }
-            }
-        }
-        
-        
-
-        
-        IDataReader dbReader = ReadDatabase("SELECT * FROM People WHERE ID = \'PP1\'");
-
-        while (dbReader.Read())
-        {
-            Debug.Log(dbReader.GetInt32(3).ToString() + ", " + dbReader.GetInt32(4).ToString());
-        }
-
-        UpdateDatabase("UPDATE People SET Health = 5 WHERE ID = \'PP1\'"); 
-        
-        dbReader = ReadDatabase("SELECT * FROM People WHERE ID = \'PP1\'");
-
-        while (dbReader.Read())
-        {
-            Debug.Log(dbReader.GetInt32(3).ToString() + ", " + dbReader.GetInt32(4).ToString());
-        }
-        
-
-        /*
-        Debug.Log("Testing prepared statements");
-        IDbCommand newcmd;
-        newcmd = dbConnection.CreateCommand();
-        string str = "SELECT * FROM People WHERE province = (@provinceID)";
-        newcmd.CommandText = str;
-
-        var parameter = newcmd.CreateParameter();
-        parameter.ParameterName = "@provinceID";
-        parameter.Value = "PV1";
-        newcmd.Parameters.Add(parameter);
-
-        IDataReader rdr = newcmd.ExecuteReader();
-
-        while(rdr.Read())
-        {
-            Debug.Log("value: " + rdr.GetString(0));
-        }
-        */
-
+        ProcessDay();
     }
 
 
@@ -203,7 +53,7 @@ public class GameManager : MonoBehaviour
         float totalcost = totalwage + building.getAverageIngredientCost() * producedAmount;
 
         //add premium
-        float wantsprice = ((int)((totalcost / producedAmount) * 1000)) / 1000 + building.getPremium();
+        float wantsprice = Mathf.Round(totalcost / producedAmount) + building.getPremium();
 
         MarketOrder[] outputOrder = new MarketOrder[producedAmount];
 
@@ -230,7 +80,6 @@ public class GameManager : MonoBehaviour
         foreach (PersonEntry employee in employees)
         {
             productionStock += employee.getStrength() * GoodsManager.skillModifiers[building.getGoodType()][0]
-                + employee.getStrength() * GoodsManager.skillModifiers[building.getGoodType()][0]
                 + employee.getIntelligence() * GoodsManager.skillModifiers[building.getGoodType()][1]
                 + employee.getPersonability() * GoodsManager.skillModifiers[building.getGoodType()][2];
         }
@@ -242,7 +91,8 @@ public class GameManager : MonoBehaviour
         {
             productionStock -= 1;
             ingredientStock -= 1;
-            count += 1;
+
+            count += 1 * GoodsManager.goodsProductionRatio[building.getGoodType()];
 
             if(GoodsManager.ProductIngredientDict[building.getGoodType()] < 0)
             {
@@ -257,11 +107,13 @@ public class GameManager : MonoBehaviour
 
         if (GoodsManager.ProductIngredientDict[building.getGoodType()] >= 0)
         {
-            BuildingsQueries.ChangeIngredientStock(building.getID(), -count);
+            BuildingsQueries.ChangeIngredientStock(building.getID(), -count/GoodsManager.goodsProductionRatio[building.getGoodType()]);
         }
 
 
         BuildingsQueries.SetProductionStockpile(building.getID(), productionStock);
+
+        Debug.Log(string.Format("Building {0} produced {1} of {2}", building.getID(), count, GoodsManager.TypeToNameDict[building.getGoodType()]));
 
         return count;
     }
@@ -271,18 +123,13 @@ public class GameManager : MonoBehaviour
     //Participating means that they have money and that their daily Health and Happiness gained is below the daily deduction amount.
     private MarketOrder GenerateBuyOrderPerson(PersonEntry person)
     {
-        string personID = person.getID();
-        MarketOrder outputOrder = null;
-
         //which good to purchase first is the one that provides the most value based on its current health and happiness.
-        int wantsgoodtype = GoodsManager.CalculateBestGood(person.getHealth(), person.getHappiness());
+        int wantsgoodtype = GoodsManager.CalculateBestGood(person);
 
         //Price is determined by following equation: (Asking Price) = (Good¡¯s Heath value) * (PricePerHealth) + (Good¡¯s Happiness value) * (PricePerHappiness)
         float wantsprice = person.getPricePerHealth() * GoodsManager.CalculateHealthGain(wantsgoodtype, person.getHealth()) + person.getPricePerHappiness() * GoodsManager.CalculateHappinessGain(wantsgoodtype, person.getHappiness());
 
-        outputOrder = new MarketOrder(wantsgoodtype, wantsprice, personID);
-
-        return outputOrder;
+        return new MarketOrder(wantsgoodtype, wantsprice, person.getID());
     }
 
     
@@ -290,41 +137,18 @@ public class GameManager : MonoBehaviour
     //price is the average value for the past few days
     //The buyer can also go over the average value based on how well its business is doing
     //Buyers always try to get enough ingredients for a full production.
-    private List<MarketOrder> GenerateBuyOrderBuilding(BuildingEntry building)
+    private MarketOrder GenerateBuyOrderBuilding(BuildingEntry building)
     {
-        List<MarketOrder> outputOrders = new List<MarketOrder>();
-
         //only make amount possible to buy with current funds.
-        float currentFunds = building.getBudget();
         float askingPrice = building.getAverageIngredientCost();
-        float potentialStock = building.getIngredientStockpile();
 
-        while(currentFunds >= askingPrice && potentialStock <= building.getLevel() * 2)
-        {
-            currentFunds -= askingPrice;
-            potentialStock++;
-
-            int ingredientType = 0;
-
-            if(GoodsManager.ProductIngredientDict[building.getGoodType()] < 0)
-            {
-                break;
-            }
-            else
-            {
-                ingredientType = GoodsManager.ProductIngredientDict[building.getGoodType()];
-            }
-
-            outputOrders.Add(new MarketOrder(ingredientType, askingPrice, building.getID()));
-        }
-
-        return outputOrders;
+        return new MarketOrder(GoodsManager.ProductIngredientDict[building.getGoodType()], askingPrice, building.getID());
     }
 
     
 
     //Operates the market for a single province.
-    private void OperateMarket(string provinceID)
+    private void OperateMarket_old(string provinceID)
     {
         //make an array of lists that will hold market orders by each good type.
         List<MarketOrder>[] buyOrders = new List<MarketOrder>[GoodsManager.GoodCount];
@@ -353,10 +177,6 @@ public class GameManager : MonoBehaviour
         //fill buy order and sell order from buildings
         foreach(BuildingEntry building in BuildingsQueries.GetAllBuildings(provinceID))
         {
-            foreach(MarketOrder order in GenerateBuyOrderBuilding(building))
-            {
-                buyOrders[order.Goodtype].Add(order);
-            }
 
             foreach(MarketOrder order in GenerateSellOrder(building))
             {
@@ -454,6 +274,342 @@ public class GameManager : MonoBehaviour
 
     }
 
+    private void OperateMarket(string provinceID)
+    {
+        //make an array of lists that will hold market orders by each good type.
+        List<MarketOrder>[] sellOrders = new List<MarketOrder>[GoodsManager.GoodCount];
+        for (int i = 0; i < GoodsManager.GoodCount; i++)
+        {
+            sellOrders[i] = new List<MarketOrder>();
+        }
+
+        //make an array of buyers
+        List<BuildingEntry> buyerBuildings = BuildingsQueries.GetAllBuildings(provinceID);
+        List<PersonEntry> buyerPersons = PeopleQueries.GetAllPeople(provinceID);
+
+        //reset last sales
+        BuildingsQueries.ResetLastSales(provinceID);
+
+        //fill sell order from buildings
+        foreach (BuildingEntry building in BuildingsQueries.GetAllBuildings(provinceID))
+        {
+            MarketOrder[] sellorders = GenerateSellOrder(building);
+            for (int i = 0; i < sellorders.Length; i++)
+            {
+                MarketOrder order = sellorders[i];
+
+                order.originBuilding = building;
+                sellOrders[order.Goodtype].Add(order);
+
+                if(i % GoodsManager.ProductIngredientDict[order.Goodtype] == 0)
+                {
+                    order.originBuilding.setIngredientStockpile(-1);
+                }
+            }
+        }
+
+        bool sellOrderEmpty = false;
+
+        List<MarketOrder>[] buyOrders;
+
+        //with the sell order list, make transactions until:
+        //1. sell order is empty
+        //2. no buyers left
+        while (!sellOrderEmpty && (buyerBuildings.Count > 0 || buyerPersons.Count > 0))
+        {
+            buyOrders = new List<MarketOrder>[GoodsManager.GoodCount];
+            for (int i = 0; i < GoodsManager.GoodCount; i++)
+            {
+                buyOrders[i] = new List<MarketOrder>();
+            }
+
+            //generate buy orders
+            //fill buy order from people
+            foreach (PersonEntry person in buyerPersons)
+            {
+                MarketOrder currentMarketOrder = GenerateBuyOrderPerson(person);
+                currentMarketOrder.originPerson = person;
+                buyOrders[currentMarketOrder.Goodtype].Add(currentMarketOrder);
+            }
+
+            //fill buy order from buildings
+            foreach (BuildingEntry building in buyerBuildings)
+            {
+                MarketOrder order = GenerateBuyOrderBuilding(building);
+                order.originBuilding = building;
+
+                //skip if it doesnt require any ingredients
+                if(order.Goodtype < 0)
+                {
+                    continue;
+                }
+
+                buyOrders[order.Goodtype].Add(order);
+            }
+
+
+
+            //operate market for each good type
+            for(int i = 0; i < GoodsManager.GoodCount; i++)
+            {
+                //based on settings, try to make pairs
+                if(poorFirst)
+                {
+                    //if there's more sell orders than buy orders, assign from the back
+                    //sort ascending
+                    buyOrders[i].Sort((x, y) => x.AskingPrice.CompareTo(y.AskingPrice));
+                    sellOrders[i].Sort((x, y) => x.AskingPrice.CompareTo(y.AskingPrice));
+
+                    Debug.Log(string.Format("Process market for {0} with {1} buy orders and {2} sell orders", GoodsManager.TypeToNameDict[i], buyOrders[i].Count, sellOrders[i].Count));
+
+                    int buyindex = 0;
+                    int sellindex = 0;
+                    int count = 0;
+
+                    while(true)
+                    {
+                        //Debug.Log(string.Format("iteration good:{0}, count: {1}", GoodsManager.TypeToNameDict[i], count));
+                        count++;
+                        //exit conditions
+                        if(!(buyindex < buyOrders[i].Count && sellindex < sellOrders[i].Count))
+                        {
+                            break;
+                        }
+
+                        if(buyOrders[i][buyindex].AskingPrice >= sellOrders[i][sellindex].AskingPrice)
+                        {
+                            //make transactions and move both indexes
+                            if(Transaction(buyOrders[i][buyindex], sellOrders[i][sellindex]) > 0)
+                            {
+                                Debug.Log(string.Format("Transaction made\nSeller: {0} Buyer: {1}\nGood type: {2} Price: {3}", sellOrders[i][sellindex].OriginID, buyOrders[i][buyindex].OriginID, i, sellOrders[i][sellindex].AskingPrice));
+
+                                if(buyOrders[i][buyindex].originBuilding == null)
+                                {
+                                    buyOrders[i][buyindex].originPerson.lastGainedHappiness += GoodsManager.CalculateHappinessGain(i, buyOrders[i][buyindex].originPerson.getHappiness());
+                                    buyOrders[i][buyindex].originPerson.lastGainedHealth += GoodsManager.CalculateHealthGain(i, buyOrders[i][buyindex].originPerson.getHealth());
+                                }
+                                else
+                                {
+                                    buyOrders[i][buyindex].originBuilding.setIngredientStockpile(1);
+                                }
+
+                                sellOrders[i].RemoveAt(0);
+
+                                buyindex++;
+                            }
+                            //transaction failed due to insufficient funds
+                            else
+                            {
+                                if (buyOrders[i][buyindex].originBuilding == null)
+                                {
+                                    buyOrders[i][buyindex].originPerson.finishedGoodtypes[i] = true;
+                                }
+
+                                //just move buyindex since the buyer is not wealthy enough
+                                buyindex++;
+                            }
+                        }
+                        else
+                        {
+                            if(buyOrders[i][buyindex].originBuilding == null)
+                            {
+                                buyOrders[i][buyindex].originPerson.finishedGoodtypes[i] = true;
+                            }
+
+                            buyindex++;
+                        }
+                    }
+
+                    //leftover people who couldnt buy anything
+                    if(buyindex < buyOrders[i].Count)
+                    {
+                        for(int j = 0; buyindex + j < buyOrders[i].Count; j++)
+                        {
+                            if (buyOrders[i][buyindex + j].originBuilding == null)
+                            {
+                                buyOrders[i][buyindex + j].originPerson.finishedGoodtypes[i] = true;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    //modified process to prioritize rich people
+
+                }
+            }
+
+            //check for satisfied buyers leaving market
+            //exit if it filled its ingredient stock or the market for ingredients it wants is empty
+            List<int> removeIndex = new List<int>();
+
+            //int exitreasoncode = -1;
+
+            for (int i = 0; i < buyerBuildings.Count; i++)
+            {
+                int ingredienttype = GoodsManager.ProductIngredientDict[buyerBuildings[i].getGoodType()];
+
+
+                //full ingredient stock
+                if (BuildingsQueries.GetBuilding(buyerBuildings[i].getID()).getIngredientStockpile() >= buyerBuildings[i].getLevel() * 2)
+                {
+                    //exitreasoncode = 0;
+                    removeIndex.Add(i);
+                }
+                //doesnt want any ingredient. redundant but just in case.
+                else if (ingredienttype < 0)
+                {
+                    //exitreasoncode = 1;
+                    removeIndex.Add(i);
+                }
+                //no ingredient left to buy
+                else if(sellOrders[ingredienttype].Count <= 0)
+                {
+                    //exitreasoncode = 2;
+                    removeIndex.Add(i);
+                }
+                //no money to buy stuff
+                else if(buyerBuildings[i].getBudget() <= 0)
+                {
+                    //exitreasoncode = 3;
+                    removeIndex.Add(i);
+                }
+                //everything is too expensive
+                else if(sellOrders[ingredienttype][0].AskingPrice > buyerBuildings[i].getBudget())
+                {
+                    //exitreasoncode = 4;
+                    removeIndex.Add(i);
+                }
+            }
+
+            int offset = 0;
+
+            foreach(int i in removeIndex)
+            {
+                //Debug.Log(buyerBuildings[i - offset].getID() + " was removed for " + exitreasoncode + "\n" + buyerBuildings[i-offset].getIngredientStockpile());
+                buyerBuildings.RemoveAt(i -offset);
+                offset++;
+            }
+
+            offset = 0;
+            removeIndex = new List<int>();
+
+            //exit if it got 10+ health and happiness this day
+            //also exit if they failed to get goods for all types
+            //this information is stored as an array of ints in their entries
+            for (int i = 0; i < buyerPersons.Count; i++)
+            {
+                if(buyerPersons[i].lastGainedHealth >= 10 && buyerPersons[i].lastGainedHappiness >= 10)
+                {
+                    Debug.Log("exit 1");
+                    removeIndex.Add(i);
+                }
+                else
+                {
+                    PersonEntry person = buyerPersons[i];
+                    bool somethingtobuy = false;
+
+                    //if all goods are too expensive
+                    for(int j = 0; j < GoodsManager.GoodCount; j++)
+                    {
+                        //if the person is not finished with a certain good, there exists something to buy
+                        if(person.finishedGoodtypes[j] == false)
+                        {
+                            somethingtobuy = true;
+                            break;
+                        }
+                    }
+                    if(somethingtobuy == false)
+                    {
+                        Debug.Log("exit 2");
+                        removeIndex.Add(i);
+                    }
+                }
+            }
+
+            foreach (int i in removeIndex)
+            {
+                Debug.Log(buyerPersons[i - offset].getID() + " was removed");
+                buyerPersons.RemoveAt(i - offset);
+                offset++;
+            }
+
+
+            //check if sell order for all types is empty
+            sellOrderEmpty = true;
+            for(int i = 0; i < sellOrders.Length; i++)
+            {
+                if(sellOrders[i].Count > 0)
+                {
+                    sellOrderEmpty = false;
+                    break;
+                }   
+            }
+        }
+    }
+
+    private int Transaction(MarketOrder buyOrder, MarketOrder order)
+    {
+        //exchange goods and money.
+        //access the buyer and subtract the asking price of the sell order. give him the good type specified.
+        //access the seller and add money to it.
+        //remove both orders from the list.
+        int outputCode = 0;
+
+        string buyerFirstTwo = (buyOrder.OriginID[0].ToString() + buyOrder.OriginID[1].ToString());
+
+        BuildingEntry seller = BuildingsQueries.GetBuilding(order.OriginID);
+
+        if (buyerFirstTwo == "PP")
+        {
+            PersonEntry buyer = PeopleQueries.GetPerson(buyOrder.OriginID);
+
+            if (buyer.getMoney() >= order.AskingPrice)
+            {
+                PeopleQueries.ChangeMoney(buyer.getID(), (-1) * order.AskingPrice);
+                PeopleQueries.ChangeHealth(buyer.getID(), GoodsManager.CalculateHealthGain(order.Goodtype, buyer.getHealth()));
+                PeopleQueries.ChangeHappiness(buyer.getID(), GoodsManager.CalculateHappinessGain(order.Goodtype, buyer.getHappiness()));
+
+                BuildingsQueries.ChangeMoney(seller.getID(), order.AskingPrice);
+                BuildingsQueries.ChangeLastSales(seller.getID(), 1);
+
+                uiManager.InputTransactionHistory(order.Goodtype, buyer.getID(), seller.getID(), order.AskingPrice);
+
+                outputCode = 1;
+            }
+            else
+                outputCode = -1;
+        }
+        else if (buyerFirstTwo == "BD")
+        {
+            BuildingEntry buyer = BuildingsQueries.GetBuilding(buyOrder.OriginID);
+
+            if (buyer.getBudget() >= order.AskingPrice)
+            {
+                BuildingsQueries.ChangeMoney(buyer.getID(), (-1) * order.AskingPrice);
+                BuildingsQueries.ChangeAverageIngredientCost(buyer.getID(), order.AskingPrice);
+                BuildingsQueries.ChangeIngredientStock(buyer.getID(), 1);
+
+                BuildingsQueries.ChangeMoney(seller.getID(), order.AskingPrice);
+                BuildingsQueries.ChangeLastSales(seller.getID(), 1);
+
+                uiManager.InputTransactionHistory(order.Goodtype, buyer.getID(), seller.getID(), order.AskingPrice);
+
+                outputCode = 1;
+            }
+            else
+                outputCode = -1;
+        }
+        else
+        {
+            Debug.LogError("Neither person nor building. who tf r u");
+
+            outputCode = -1;
+        }
+
+        return outputCode;
+    }
+
     private void OperateLaborMarket(string provinceID)
     {
         List<BuildingEntry> buildings = BuildingsQueries.GetAllBuildings(provinceID);
@@ -534,6 +690,8 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        Debug.Log(string.Format("total wage paid by {0} is {1}", building.getID(), total));
+
         return total;
     }
 
@@ -542,6 +700,12 @@ public class GameManager : MonoBehaviour
         //deduct 10 happiness and health everyday
         //cant go under zero
         //cant go over 100
+
+        foreach(PersonEntry person in PeopleQueries.GetAllPeople(provinceID))
+        {
+            PeopleQueries.ChangeHealth(person.getID(), -10);
+            PeopleQueries.ChangeHappiness(person.getID(), -10);
+        }
     }
 
     private void DayReflection(string provinceID)
@@ -553,22 +717,49 @@ public class GameManager : MonoBehaviour
          * premium of buildings
          * people's price per happiness and health
          * wage
-         * strength intelligence
+         * strength intelligence personability
          */
 
         foreach(BuildingEntry building in BuildingsQueries.GetAllBuildings(provinceID))
         {
+            //goal: maximize profit
+
             //premium
-            //-decrease when the building is losing money
+            //-decrease when the building is losing money. losing money means goods are not selling enough
             //-cannot go under zero. If it is zero and is still losing money, consider reducing the level.
             //if everything is sold, increase.
 
 
             //wage
             //-if the maximum employee count is not reached, increase steadily.
-            //-cannot go under zero
+            //-cannot go under 1
             //-when the building is making money, decrease very slowly
             //-when the building is losing money, increase.
+
+
+            //did not hire enough - increase wage to attract workers. also increase premium
+            if(building.getLevel() * 2 > PeopleQueries.GetEmployeeCount(building.getID()))
+            {
+                BuildingsQueries.ChangeWage(building.getID(), 1);
+                BuildingsQueries.ChangePremium(building.getID(), 1);
+            }
+            else
+            {
+                //full hire but didnt sell all - decrease premium first to reduce price. If premium is at zero, reduce wage.
+                if(BuildingsQueries.GetBuilding(building.getID()).getLastSales() < building.getLevel() * 2)
+                {
+                    //decrease premium. if it is already zero, the fuction fails and returns -1
+                    if (BuildingsQueries.ChangePremium(building.getID(), -1) < 0)
+                    {
+                        BuildingsQueries.ChangeWage(building.getID(), -1);
+                    }
+                }
+                //sold all - increase premium
+                else
+                {
+                    BuildingsQueries.ChangePremium(building.getID(), 1);
+                }
+            }
         }
 
         foreach(PersonEntry person in PeopleQueries.GetAllPeople(provinceID))
@@ -593,6 +784,9 @@ public class MarketOrder
     int goodtype;
     float askingPrice;
     string originID;
+
+    public BuildingEntry originBuilding = null;
+    public PersonEntry originPerson = null;
 
     public MarketOrder(int goodtype, float askingPrice, string originID)
     {

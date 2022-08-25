@@ -239,7 +239,7 @@ public class PeopleQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("Resetted employer of all of {0} people in {1}", GetAllPeople(provinceID).Count, provinceID));
+        //Debug.Log(string.Format("Resetted employer of all of {0} people in {1}", GetAllPeople(provinceID).Count, provinceID));
 
         dbConnection.Close();
     }
@@ -274,7 +274,7 @@ public class PeopleQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s employer was set to {1}", personID, buildingID));
+        //Debug.Log(string.Format("{0}'s employer was set to {1}", personID, buildingID));
 
         dbConnection.Close();
     }
@@ -309,7 +309,7 @@ public class PeopleQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s money was changed by {1}", personID, byAmount));
+        //Debug.Log(string.Format("{0}'s money was changed by {1}", personID, byAmount));
 
         dbConnection.Close();
     }
@@ -326,15 +326,38 @@ public class PeopleQueries
         dbConnection.Open();
         //--------------------------------------------
 
+        PersonEntry person = GetPerson(personID);
 
         IDbCommand newcmd;
         newcmd = dbConnection.CreateCommand();
-        string str = "UPDATE People SET Health = Health + (@health) WHERE ID = (@personID)";
-        newcmd.CommandText = str;
 
         var parameter1 = newcmd.CreateParameter();
         parameter1.ParameterName = "@health";
-        parameter1.Value = byAmount;
+
+        if (person.getHealth() + byAmount > 100)
+        {
+            //set as 100
+            string str = "UPDATE People SET Health = (@health) WHERE ID = (@personID)";
+            newcmd.CommandText = str;
+
+            parameter1.Value = 100;
+        }
+        else if(person.getHealth() + byAmount < 0)
+        {
+            //set as 0
+            string str = "UPDATE People SET Health = (@health) WHERE ID = (@personID)";
+            newcmd.CommandText = str;
+
+            parameter1.Value = 0;
+        }
+        else
+        {
+            string str = "UPDATE People SET Health = Health + (@health) WHERE ID = (@personID)";
+            newcmd.CommandText = str;
+
+            parameter1.Value = byAmount;
+        }
+
         newcmd.Parameters.Add(parameter1);
 
         var parameter2 = newcmd.CreateParameter();
@@ -362,14 +385,38 @@ public class PeopleQueries
         //--------------------------------------------
 
 
+        PersonEntry person = GetPerson(personID);
+
         IDbCommand newcmd;
         newcmd = dbConnection.CreateCommand();
-        string str = "UPDATE People SET Happiness = Happiness + (@happiness) WHERE ID = (@personID)";
-        newcmd.CommandText = str;
 
         var parameter1 = newcmd.CreateParameter();
         parameter1.ParameterName = "@happiness";
-        parameter1.Value = byAmount;
+
+        if (person.getHealth() + byAmount > 100)
+        {
+            //set as 100
+            string str = "UPDATE People SET Happiness = (@happiness) WHERE ID = (@personID)";
+            newcmd.CommandText = str;
+
+            parameter1.Value = 100;
+        }
+        else if (person.getHealth() + byAmount < 0)
+        {
+            //set as 0
+            string str = "UPDATE People SET Happiness = (@happiness) WHERE ID = (@personID)";
+            newcmd.CommandText = str;
+
+            parameter1.Value = 0;
+        }
+        else
+        {
+            string str = "UPDATE People SET Happiness = Health + (@happiness) WHERE ID = (@personID)";
+            newcmd.CommandText = str;
+
+            parameter1.Value = byAmount;
+        }
+
         newcmd.Parameters.Add(parameter1);
 
         var parameter2 = newcmd.CreateParameter();
@@ -380,7 +427,6 @@ public class PeopleQueries
         newcmd.ExecuteNonQuery();
 
         Debug.Log(string.Format("{0}'s happiness was changed by {1}", personID, byAmount));
-
 
         dbConnection.Close();
     }

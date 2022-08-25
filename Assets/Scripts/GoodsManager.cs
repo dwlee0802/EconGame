@@ -38,37 +38,54 @@ public class GoodsManager
         new float[] { 0.6f, 0.2f, 0.2f}
     };
 
-    //How much utility a certain good type provides when one more of that good is added. Good count x 11. Current value is rounded to the nearest tenth.
-    static int[,] marginalHealth = new int[3, 11] 
+    //how much one ingredient is converted to the product
+    public static int[] goodsProductionRatio = new int[3]
     {
         //bread
-        {10,9,8,7,6,5,4,3,2,1,0},
+        2,
         //meat
-        {8,9,10,9,8,7,6,5,4,3,0},
+        2,
         //wheat
-        {8,6,5,4,3,2,2,1,1,0,0}
+        4
     };
-    static int[,] marginalHappiness = new int[3, 11]
+
+    //How much utility a certain good type provides when one more of that good is added. Good count x 11. Current value is rounded to the nearest tenth.
+    static int[,] marginalHealth = new int[3, 15] 
     {
         //bread
-        {8,8,7,5,4,3,2,1,0,0,0},
+        {9,9,8,7,6,5,4,3,2,1,0,0,0,0,0},
         //meat
-        {9,8,7,6,5,4,3,3,3,3,3},
+        {8,9,10,9,8,7,6,5,4,3,0,0,0,0,0},
         //wheat
-        {5,4,3,2,2,1,1,0,0,0,0}
+        {6,5,5,4,3,2,2,1,1,0,0,0,0,0,0}
+    };
+    static int[,] marginalHappiness = new int[3, 15]
+    {
+        //bread
+        {7,7,7,5,4,3,2,1,0,0,0,0,0,0,0},
+        //meat
+        {9,8,7,6,5,4,3,3,3,3,3,2,1,0,0},
+        //wheat
+        {4,4,3,2,2,1,1,0,0,0,0,0,0,0,0}
     };
 
     public static int GoodCount { get => goodCount;}
 
     //Determines the good that provides the most total util based on current stats.
-    public static int CalculateBestGood(int currentHealth, int currentHappiness)
+    public static int CalculateBestGood(PersonEntry person)
     {
         int highestvalue = 0;
         int highesttype = 0;
 
         for(int i = 0; i < goodCount; i++)
         {
-            int currentvalue = marginalHealth[i, ((int)(currentHealth / 10))] + marginalHappiness[i, ((int)(currentHappiness / 10))];
+            //if the person is done with the current good index, skip
+            if(person.finishedGoodtypes[i])
+            {
+                continue;
+            }
+
+            int currentvalue = marginalHealth[i, ((int)(person.getHealth() / 10))] + marginalHappiness[i, ((int)(person.getHappiness() / 10))];
             if (highestvalue < currentvalue)
             {
                 highestvalue = currentvalue;

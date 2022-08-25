@@ -20,6 +20,11 @@ public class PersonEntry
 
     string employer;
 
+    public int lastGainedHealth = 0;
+    public int lastGainedHappiness = 0;
+
+    public bool[] finishedGoodtypes = new bool[GoodsManager.GoodCount];
+
     public string getID()
     {
         return ID;
@@ -73,7 +78,7 @@ public class PersonEntry
         return employer;
     }
 
-    public PersonEntry(string iD, string province, float money = 0, int health = 0, int happiness = 0, float strenghth = 0f, float intelligence = 0f, float pricePerHealth = 1, float pricePerHappiness = 1, string employer = "NONE", float personability = 0f)
+    public PersonEntry(string iD, string province, float money = 0f, int health = 0, int happiness = 0, float strenghth = 0f, float intelligence = 0f, float pricePerHealth = 1, float pricePerHappiness = 1, string employer = "NONE", float personability = 0f)
     {
         ID = iD;
         this.province = province;

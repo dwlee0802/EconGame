@@ -4,6 +4,12 @@ using UnityEngine;
 
 public class TableColumns
 {
+    //adding columns checklist
+    //-add on sql
+    //-add here
+    //-update entries initializers and getters
+    //-update queries for both single get and all get
+
     public enum PeopleColumns
     {
         ID,
@@ -31,7 +37,8 @@ public class TableColumns
         Premium,
         Level,
         AverageIngredientCost,
-        ProductionStockpile
+        ProductionStockpile,
+        LastSales
     }
 
     public enum ProvinceColumns
