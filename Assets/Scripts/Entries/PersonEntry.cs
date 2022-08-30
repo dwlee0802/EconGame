@@ -77,8 +77,16 @@ public class PersonEntry
     {
         return employer;
     }
+    public int getLastGainedHealth()
+    {
+        return lastGainedHealth;
+    }
+    public int getLastGainedHappiness()
+    {
+        return lastGainedHappiness;
+    }
 
-    public PersonEntry(string iD, string province, float money = 0f, int health = 0, int happiness = 0, float strenghth = 0f, float intelligence = 0f, float pricePerHealth = 1, float pricePerHappiness = 1, string employer = "NONE", float personability = 0f)
+    public PersonEntry(string iD, string province, float money = 0f, int health = 0, int happiness = 0, float strenghth = 0f, float intelligence = 0f, float pricePerHealth = 1, float pricePerHappiness = 1, string employer = "NULL", float personability = 0f, int lastGainedHealth = 0, int lastGainedHappiness = 0)
     {
         ID = iD;
         this.province = province;
@@ -91,6 +99,8 @@ public class PersonEntry
         this.pricePerHappiness = pricePerHappiness;
         this.employer = employer;
         this.personability = personability;
+        this.lastGainedHealth = lastGainedHealth;
+        this.lastGainedHappiness = lastGainedHappiness;
     }
     public override string ToString()
     {

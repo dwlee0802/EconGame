@@ -84,20 +84,7 @@ public class PeopleQueries
 
         if(rdr.Read())
         {
-            PersonEntry output = new PersonEntry(
-                personID,
-                rdr.GetString(((int)TableColumns.PeopleColumns.Province)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.Money)),
-                rdr.GetInt32(((int)TableColumns.PeopleColumns.Health)),
-                rdr.GetInt32(((int)TableColumns.PeopleColumns.Happiness)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.Strength)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.Intelligence)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.PricePerHealth)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.PricePerHappiness)),
-                rdr.GetString(((int)TableColumns.PeopleColumns.Employer)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.Personability))
-                );
-
+            PersonEntry output = MakePersonEntry(rdr);
             dbConnection.Close();
 
             return output;
@@ -143,19 +130,7 @@ public class PeopleQueries
 
         while(rdr.Read())
         {
-            output.Add(new PersonEntry(
-                rdr.GetString(((int)TableColumns.PeopleColumns.ID)),
-                rdr.GetString(((int)TableColumns.PeopleColumns.Province)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.Money)),
-                rdr.GetInt32(((int)TableColumns.PeopleColumns.Health)),
-                rdr.GetInt32(((int)TableColumns.PeopleColumns.Happiness)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.Strength)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.Intelligence)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.PricePerHealth)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.PricePerHappiness)),
-                rdr.GetString(((int)TableColumns.PeopleColumns.Employer)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.Personability))
-                )) ;
+            output.Add(MakePersonEntry(rdr));
         }
 
         dbConnection.Close();
@@ -193,19 +168,7 @@ public class PeopleQueries
 
         while (rdr.Read())
         {
-            output.Add(new PersonEntry(
-                rdr.GetString(((int)TableColumns.PeopleColumns.ID)),
-                rdr.GetString(((int)TableColumns.PeopleColumns.Province)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.Money)),
-                rdr.GetInt32(((int)TableColumns.PeopleColumns.Health)),
-                rdr.GetInt32(((int)TableColumns.PeopleColumns.Happiness)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.Strength)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.Intelligence)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.PricePerHealth)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.PricePerHappiness)),
-                rdr.GetString(((int)TableColumns.PeopleColumns.Employer)),
-                rdr.GetFloat(((int)TableColumns.PeopleColumns.Personability))
-                ));
+            output.Add(MakePersonEntry(rdr));
         }
 
         dbConnection.Close();
@@ -369,6 +332,8 @@ public class PeopleQueries
 
         Debug.Log(string.Format("{0}'s health was changed by {1}", personID, byAmount));
 
+        ChangeGainedHealth(personID, byAmount);
+
         dbConnection.Close();
     }
 
@@ -427,6 +392,347 @@ public class PeopleQueries
         newcmd.ExecuteNonQuery();
 
         Debug.Log(string.Format("{0}'s happiness was changed by {1}", personID, byAmount));
+
+        ChangeGainedHappiness(personID, byAmount);
+
+        dbConnection.Close();
+    }
+
+    public static void ChangeGainedHealth(string personID, float byAmount)
+    {
+        //establish DB connection---------------------
+        IDbConnection dbConnection;
+        string dbname = "GameDatabase.db";
+        string currentPath = System.IO.Path.GetDirectoryName(Application.dataPath);
+        currentPath = currentPath + "\\" + dbname;
+        //Debug.Log("Database file path: " + currentPath);
+        dbConnection = new SqliteConnection("URI=file:" + currentPath);
+        dbConnection.Open();
+        //--------------------------------------------
+        if(byAmount < 0)
+        {
+            return;
+        }
+
+        IDbCommand newcmd;
+        newcmd = dbConnection.CreateCommand();
+
+        var parameter1 = newcmd.CreateParameter();
+        parameter1.ParameterName = "@happiness";
+
+        string str = "UPDATE People SET GainedHealth = GainedHealth + (@happiness) WHERE ID = (@personID)";
+        newcmd.CommandText = str;
+
+        parameter1.Value = byAmount;
+        newcmd.Parameters.Add(parameter1);
+
+        var parameter2 = newcmd.CreateParameter();
+        parameter2.ParameterName = "@personID";
+        parameter2.Value = personID;
+        newcmd.Parameters.Add(parameter2);
+
+        newcmd.ExecuteNonQuery();
+
+        Debug.Log(string.Format("{0}'s gained health was changed by {1}", personID, byAmount));
+
+        dbConnection.Close();
+    }
+
+    public static void ChangeGainedHappiness(string personID, float byAmount)
+    {
+        //establish DB connection---------------------
+        IDbConnection dbConnection;
+        string dbname = "GameDatabase.db";
+        string currentPath = System.IO.Path.GetDirectoryName(Application.dataPath);
+        currentPath = currentPath + "\\" + dbname;
+        //Debug.Log("Database file path: " + currentPath);
+        dbConnection = new SqliteConnection("URI=file:" + currentPath);
+        dbConnection.Open();
+        //--------------------------------------------
+        if (byAmount < 0)
+        {
+            return;
+        }
+
+
+        IDbCommand newcmd;
+        newcmd = dbConnection.CreateCommand();
+
+        var parameter1 = newcmd.CreateParameter();
+        parameter1.ParameterName = "@happiness";
+
+        string str = "UPDATE People SET GainedHappiness = GainedHappiness + (@happiness) WHERE ID = (@personID)";
+        newcmd.CommandText = str;
+
+        parameter1.Value = byAmount;
+        newcmd.Parameters.Add(parameter1);
+
+        var parameter2 = newcmd.CreateParameter();
+        parameter2.ParameterName = "@personID";
+        parameter2.Value = personID;
+        newcmd.Parameters.Add(parameter2);
+
+        newcmd.ExecuteNonQuery();
+
+        Debug.Log(string.Format("{0}'s gained happiness was changed by {1}", personID, byAmount));
+
+        dbConnection.Close();
+    }
+
+    public static void ResetGained(string provinceID)
+    {
+        //establish DB connection---------------------
+        IDbConnection dbConnection;
+        string dbname = "GameDatabase.db";
+        string currentPath = System.IO.Path.GetDirectoryName(Application.dataPath);
+        currentPath = currentPath + "\\" + dbname;
+        //Debug.Log("Database file path: " + currentPath);
+        dbConnection = new SqliteConnection("URI=file:" + currentPath);
+        dbConnection.Open();
+        //--------------------------------------------
+
+
+        IDbCommand newcmd;
+        newcmd = dbConnection.CreateCommand();
+
+        string str = "UPDATE People SET GainedHappiness = 0, GainedHealth = 0 WHERE Province = (@provinceID)";
+        newcmd.CommandText = str;
+
+        var parameter2 = newcmd.CreateParameter();
+        parameter2.ParameterName = "@provinceID";
+        parameter2.Value = provinceID;
+        newcmd.Parameters.Add(parameter2);
+
+        newcmd.ExecuteNonQuery();
+
+        Debug.Log(string.Format("{0}'s population's gained values were reset to 0.", provinceID));
+
+        dbConnection.Close();
+    }
+
+    public static void ChangePricePerHappiness(string personID, float byAmount)
+    {
+        //establish DB connection---------------------
+        IDbConnection dbConnection;
+        string dbname = "GameDatabase.db";
+        string currentPath = System.IO.Path.GetDirectoryName(Application.dataPath);
+        currentPath = currentPath + "\\" + dbname;
+        //Debug.Log("Database file path: " + currentPath);
+        dbConnection = new SqliteConnection("URI=file:" + currentPath);
+        dbConnection.Open();
+        //--------------------------------------------
+
+
+        IDbCommand newcmd;
+        newcmd = dbConnection.CreateCommand();
+
+        var parameter1 = newcmd.CreateParameter();
+        parameter1.ParameterName = "@happiness";
+
+        string str = "UPDATE People SET PricePerHappiness = PricePerHappiness + (@happiness) WHERE ID = (@personID)";
+        newcmd.CommandText = str;
+
+        parameter1.Value = byAmount;
+        newcmd.Parameters.Add(parameter1);
+
+        var parameter2 = newcmd.CreateParameter();
+        parameter2.ParameterName = "@personID";
+        parameter2.Value = personID;
+        newcmd.Parameters.Add(parameter2);
+
+        newcmd.ExecuteNonQuery();
+
+        Debug.Log(string.Format("{0}'s price per happiness was changed by {1}", personID, byAmount));
+
+        dbConnection.Close();
+    }
+
+    public static void ChangePricePerHealth(string personID, float byAmount)
+    {
+        //establish DB connection---------------------
+        IDbConnection dbConnection;
+        string dbname = "GameDatabase.db";
+        string currentPath = System.IO.Path.GetDirectoryName(Application.dataPath);
+        currentPath = currentPath + "\\" + dbname;
+        //Debug.Log("Database file path: " + currentPath);
+        dbConnection = new SqliteConnection("URI=file:" + currentPath);
+        dbConnection.Open();
+        //--------------------------------------------
+
+
+        IDbCommand newcmd;
+        newcmd = dbConnection.CreateCommand();
+
+        var parameter1 = newcmd.CreateParameter();
+        parameter1.ParameterName = "@happiness";
+
+        string str = "UPDATE People SET PricePerHealth = PricePerHealth + (@happiness) WHERE ID = (@personID)";
+        newcmd.CommandText = str;
+
+        parameter1.Value = byAmount;
+        newcmd.Parameters.Add(parameter1);
+
+        var parameter2 = newcmd.CreateParameter();
+        parameter2.ParameterName = "@personID";
+        parameter2.Value = personID;
+        newcmd.Parameters.Add(parameter2);
+
+        newcmd.ExecuteNonQuery();
+
+        Debug.Log(string.Format("{0}'s price per health was changed by {1}", personID, byAmount));
+
+        dbConnection.Close();
+    }
+
+    public static void ChangeStrength(string personID, float byAmount)
+    {
+        //establish DB connection---------------------
+        IDbConnection dbConnection;
+        string dbname = "GameDatabase.db";
+        string currentPath = System.IO.Path.GetDirectoryName(Application.dataPath);
+        currentPath = currentPath + "\\" + dbname;
+        //Debug.Log("Database file path: " + currentPath);
+        dbConnection = new SqliteConnection("URI=file:" + currentPath);
+        dbConnection.Open();
+        //--------------------------------------------
+
+
+        PersonEntry person = GetPerson(personID);
+
+        IDbCommand newcmd;
+        newcmd = dbConnection.CreateCommand();
+
+        var parameter1 = newcmd.CreateParameter();
+        parameter1.ParameterName = "@strength";
+
+        if (person.getStrength() + byAmount < 0)
+        {
+            //set as 0
+            string str = "UPDATE People SET Strength = (@strength) WHERE ID = (@personID)";
+            newcmd.CommandText = str;
+
+            parameter1.Value = 0;
+        }
+        else
+        {
+            string str = "UPDATE People SET Strength = Strength + (@strength) WHERE ID = (@personID)";
+            newcmd.CommandText = str;
+
+            parameter1.Value = byAmount;
+        }
+
+        newcmd.Parameters.Add(parameter1);
+
+        var parameter2 = newcmd.CreateParameter();
+        parameter2.ParameterName = "@personID";
+        parameter2.Value = personID;
+        newcmd.Parameters.Add(parameter2);
+
+        newcmd.ExecuteNonQuery();
+
+        Debug.Log(string.Format("{0}'s strength was changed by {1}", personID, byAmount));
+
+        dbConnection.Close();
+    }
+
+    public static void ChangeIntelligence(string personID, float byAmount)
+    {
+        //establish DB connection---------------------
+        IDbConnection dbConnection;
+        string dbname = "GameDatabase.db";
+        string currentPath = System.IO.Path.GetDirectoryName(Application.dataPath);
+        currentPath = currentPath + "\\" + dbname;
+        //Debug.Log("Database file path: " + currentPath);
+        dbConnection = new SqliteConnection("URI=file:" + currentPath);
+        dbConnection.Open();
+        //--------------------------------------------
+
+
+        PersonEntry person = GetPerson(personID);
+
+        IDbCommand newcmd;
+        newcmd = dbConnection.CreateCommand();
+
+        var parameter1 = newcmd.CreateParameter();
+        parameter1.ParameterName = "@Intelligence";
+
+        if (person.getIntelligence() + byAmount < 0)
+        {
+            //set as 0
+            string str = "UPDATE People SET Intelligence = (@Intelligence) WHERE ID = (@personID)";
+            newcmd.CommandText = str;
+
+            parameter1.Value = 0;
+        }
+        else
+        {
+            string str = "UPDATE People SET Intelligence = Intelligence + (@Intelligence) WHERE ID = (@personID)";
+            newcmd.CommandText = str;
+
+            parameter1.Value = byAmount;
+        }
+
+        newcmd.Parameters.Add(parameter1);
+
+        var parameter2 = newcmd.CreateParameter();
+        parameter2.ParameterName = "@personID";
+        parameter2.Value = personID;
+        newcmd.Parameters.Add(parameter2);
+
+        newcmd.ExecuteNonQuery();
+
+        Debug.Log(string.Format("{0}'s Intelligence was changed by {1}", personID, byAmount));
+
+        dbConnection.Close();
+    }
+
+    public static void ChangePersonability(string personID, float byAmount)
+    {
+        //establish DB connection---------------------
+        IDbConnection dbConnection;
+        string dbname = "GameDatabase.db";
+        string currentPath = System.IO.Path.GetDirectoryName(Application.dataPath);
+        currentPath = currentPath + "\\" + dbname;
+        //Debug.Log("Database file path: " + currentPath);
+        dbConnection = new SqliteConnection("URI=file:" + currentPath);
+        dbConnection.Open();
+        //--------------------------------------------
+
+
+        PersonEntry person = GetPerson(personID);
+
+        IDbCommand newcmd;
+        newcmd = dbConnection.CreateCommand();
+
+        var parameter1 = newcmd.CreateParameter();
+        parameter1.ParameterName = "@Personability";
+
+        if (person.getIntelligence() + byAmount < 0)
+        {
+            //set as 0
+            string str = "UPDATE People SET Personability = (@Personability) WHERE ID = (@personID)";
+            newcmd.CommandText = str;
+
+            parameter1.Value = 0;
+        }
+        else
+        {
+            string str = "UPDATE People SET Personability = Personability + (@Personability) WHERE ID = (@personID)";
+            newcmd.CommandText = str;
+
+            parameter1.Value = byAmount;
+        }
+
+        newcmd.Parameters.Add(parameter1);
+
+        var parameter2 = newcmd.CreateParameter();
+        parameter2.ParameterName = "@personID";
+        parameter2.Value = personID;
+        newcmd.Parameters.Add(parameter2);
+
+        newcmd.ExecuteNonQuery();
+
+        Debug.Log(string.Format("{0}'s Personability was changed by {1}", personID, byAmount));
 
         dbConnection.Close();
     }
@@ -537,5 +843,26 @@ public class PeopleQueries
         Debug.Log(string.Format("{0} was removed.", personID));
 
         dbConnection.Close();
+    }
+
+    static PersonEntry MakePersonEntry(IDataReader rdr)
+    {
+        PersonEntry output = new PersonEntry(
+                   rdr.GetString(((int)TableColumns.PeopleColumns.ID)),
+                   rdr.GetString(((int)TableColumns.PeopleColumns.Province)),
+                   rdr.GetFloat(((int)TableColumns.PeopleColumns.Money)),
+                   rdr.GetInt32(((int)TableColumns.PeopleColumns.Health)),
+                   rdr.GetInt32(((int)TableColumns.PeopleColumns.Happiness)),
+                   rdr.GetFloat(((int)TableColumns.PeopleColumns.Strength)),
+                   rdr.GetFloat(((int)TableColumns.PeopleColumns.Intelligence)),
+                   rdr.GetFloat(((int)TableColumns.PeopleColumns.PricePerHealth)),
+                   rdr.GetFloat(((int)TableColumns.PeopleColumns.PricePerHappiness)),
+                   rdr.GetString(((int)TableColumns.PeopleColumns.Employer)),
+                   rdr.GetFloat(((int)TableColumns.PeopleColumns.Personability)),
+                   rdr.GetInt32(((int)TableColumns.PeopleColumns.GainedHealth)),
+                   rdr.GetInt32(((int)TableColumns.PeopleColumns.GainedHappiness))
+                   );
+
+        return output;
     }
 }

@@ -22,7 +22,9 @@ public class TableColumns
         PricePerHealth,
         PricePerHappiness,
         Employer,
-        Personability
+        Personability,
+        GainedHealth,
+        GainedHappiness
     }
 
     public enum BuildingColumns

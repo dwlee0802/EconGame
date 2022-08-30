@@ -31,6 +31,8 @@ public class GameManager : MonoBehaviour
         Debug.Log("Process Day");
         OperateLaborMarket("PV1");
         OperateMarket("PV1");
+        DayReflection("PV1");
+        DailyDeduction("PV1");
     }
 
 
@@ -289,6 +291,8 @@ public class GameManager : MonoBehaviour
 
         //reset last sales
         BuildingsQueries.ResetLastSales(provinceID);
+        //reset last gained
+        PeopleQueries.ResetGained(provinceID);
 
         //fill sell order from buildings
         foreach (BuildingEntry building in BuildingsQueries.GetAllBuildings(provinceID))
@@ -762,19 +766,66 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        foreach(PersonEntry person in PeopleQueries.GetAllPeople(provinceID))
+        foreach (PersonEntry person in PeopleQueries.GetAllPeople(provinceID))
         {
             //price per happiness and health
             //-increase or decrease based on how much is gained that day.
             //--if lower than 10, increase
             //--if same or higher than 10, decrease
             //--how much to increase or decrease is influenced by the difference btw 10 and gained amount
+            if(person.lastGainedHealth < 5)
+            {
+                PeopleQueries.ChangePricePerHealth(person.getID(), 2);
+            }
+            else if(person.lastGainedHealth < 10)
+            {
+                PeopleQueries.ChangePricePerHealth(person.getID(), 1);
+            }
+            else
+            {
+                PeopleQueries.ChangePricePerHealth(person.getID(), -1);
+            }
+
+            if(person.lastGainedHappiness < 5)
+            {
+                PeopleQueries.ChangePricePerHappiness(person.getID(), 2);
+            }
+            else if(person.lastGainedHappiness < 10)
+            {
+                PeopleQueries.ChangePricePerHappiness(person.getID(), 1);
+            }
+            else
+            {
+                PeopleQueries.ChangePricePerHappiness(person.getID(), -1);
+            }
+
 
             //strength and intelligence and personability
             //the level affects work efficiency.
             //as the pop works it gains points and when sufficient amount is gained, it levels up
             //more points are required as the level gets higher.
             //non-productive buildings can 'hire' pops for an education.
+            //natural increase only allows up to 1.5
+            //it takes 15 days to reach full productivity from 0: increase by total of 0.1
+            //how the 0.1 is distributed to the three skills is by the skill multiplyer by type in the goodsmanager
+            //if the value is already at 1.5 then the experience is wasted
+            //if the person is unemployed, skill is decreased
+
+            if(person.getEmployer() == "NULL")
+            {
+                //reduce skills
+                PeopleQueries.ChangeStrength(person.getID(), -0.1f);
+                PeopleQueries.ChangeIntelligence(person.getID(), -0.1f);
+                PeopleQueries.ChangePersonability(person.getID(), -0.1f);
+            }
+            else
+            {
+                float[] modifiers = GoodsManager.skillModifiers[BuildingsQueries.GetBuilding(person.getEmployer()).getGoodType()];
+                //raise skills based on the appropriate skills
+                PeopleQueries.ChangeStrength(person.getID(), 0.1f * modifiers[0]);
+                PeopleQueries.ChangeIntelligence(person.getID(), 0.1f * modifiers[1]);
+                PeopleQueries.ChangePersonability(person.getID(), 0.1f * modifiers[2]);
+            }
         }
     }
 }
