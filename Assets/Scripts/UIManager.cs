@@ -5,6 +5,10 @@ using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
+    /*
+     * To do list:
+     * Add growth from previous day
+     */
     [SerializeField]
     GameObject provinceMenuPanel;
 

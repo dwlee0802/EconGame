@@ -28,11 +28,14 @@ public class GameManager : MonoBehaviour
     //called when the player presses the pass day button. calculates the activity in the game world.
     public void ProcessDay()
     {
+        
         Debug.Log("Process Day");
         OperateLaborMarket("PV1");
         OperateMarket("PV1");
         DayReflection("PV1");
+        PopulationGrowth("PV1");
         DailyDeduction("PV1");
+        
     }
 
 
@@ -148,7 +151,6 @@ public class GameManager : MonoBehaviour
     }
 
     
-
     //Operates the market for a single province.
     private void OperateMarket_old(string provinceID)
     {
@@ -825,6 +827,42 @@ public class GameManager : MonoBehaviour
                 PeopleQueries.ChangeStrength(person.getID(), 0.1f * modifiers[0]);
                 PeopleQueries.ChangeIntelligence(person.getID(), 0.1f * modifiers[1]);
                 PeopleQueries.ChangePersonability(person.getID(), 0.1f * modifiers[2]);
+            }
+        }
+    }
+
+    private void PopulationGrowth(string provinceID)
+    {
+        //controls population growth
+        //each person generates growth points based on their life status
+        //calculates next required growth point for population increase
+        //formula is (pop count) * (2 + (pop count)/10 ) multiplier capped at 4
+        //add a new person to the province if growth point is met
+        //subtract from growth point and carry left over to next day
+        //if leftover is enough for another growth, repeat
+
+        int gainedGrowth = ProvincesQueries.GetProvince(provinceID).getGrowthPoints();
+        int popCount = PeopleQueries.GetPopulationCount(provinceID);
+
+        foreach(PersonEntry person in PeopleQueries.GetAllPeople(provinceID))
+        {
+            gainedGrowth += person.getHealth() / 10;
+            gainedGrowth += person.getHappiness() / 10;
+        }
+
+        while(true)
+        {
+            if(gainedGrowth >= popCount * (2 + popCount/10))
+            {
+                //pops dont get removed, so use popcount to make new ID
+                popCount++;
+                gainedGrowth -= popCount * (2 + popCount / 10);
+                PeopleQueries.AddPerson(new PersonEntry("PP" + popCount.ToString(), provinceID));
+            }
+            else
+            {
+                ProvincesQueries.SetGrowthPoints(provinceID, gainedGrowth);
+                break;
             }
         }
     }

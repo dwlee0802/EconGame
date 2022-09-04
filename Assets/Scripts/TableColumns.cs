@@ -47,6 +47,7 @@ public class TableColumns
     {
         ID,
         Name,
-        Nation
+        Nation,
+        GrowthPoints
     }
 }

@@ -737,6 +737,38 @@ public class PeopleQueries
         dbConnection.Close();
     }
 
+    public static int GetPopulationCount(string provinceID)
+    {
+        //establish DB connection---------------------
+        IDbConnection dbConnection;
+        string dbname = "GameDatabase.db";
+        string currentPath = System.IO.Path.GetDirectoryName(Application.dataPath);
+        currentPath = currentPath + "\\" + dbname;
+        //Debug.Log("Database file path: " + currentPath);
+        dbConnection = new SqliteConnection("URI=file:" + currentPath);
+        dbConnection.Open();
+        //--------------------------------------------
+
+        //execute query
+        IDbCommand newcmd;
+        newcmd = dbConnection.CreateCommand();
+        string str = "SELECT Count(*) FROM People WHERE Province = (@buildingID)";
+        newcmd.CommandText = str;
+
+        var parameter = newcmd.CreateParameter();
+        parameter.ParameterName = "@buildingID";
+        parameter.Value = provinceID;
+        newcmd.Parameters.Add(parameter);
+
+        IDataReader rdr = newcmd.ExecuteReader();
+
+        int output = int.Parse(rdr.GetValue(0).ToString());
+
+        dbConnection.Close();
+
+        return output;
+    }
+
     public static void AddPerson(PersonEntry person)
     {
         //establish DB connection---------------------
@@ -752,7 +784,7 @@ public class PeopleQueries
 
         IDbCommand newcmd;
         newcmd = dbConnection.CreateCommand();
-        string str = "INSERT INTO People VALUES ((@param1), (@param2), (@param3), (@param4), (@param5), (@param6), (@param7), (@param8), (@param9), (@param10), (@param12))";
+        string str = "INSERT INTO People VALUES ((@param1), (@param2), (@param3), (@param4), (@param5), (@param6), (@param7), (@param8), (@param9), (@param10), (@param12), (@param13), (@param14))";
         newcmd.CommandText = str;
 
         var param1 = newcmd.CreateParameter();
@@ -810,11 +842,22 @@ public class PeopleQueries
         param12.Value = person.getPersonability();
         newcmd.Parameters.Add(param12);
 
+        var param13 = newcmd.CreateParameter();
+        param13.ParameterName = "@param13";
+        param13.Value = 0;
+        newcmd.Parameters.Add(param13);
+
+        var param14 = newcmd.CreateParameter();
+        param14.ParameterName = "@param14";
+        param14.Value = 0;
+        newcmd.Parameters.Add(param14);
+
         newcmd.ExecuteNonQuery();
         Debug.Log(string.Format("new person was added.\n{0}", person));
         dbConnection.Close();
     }
 
+    //probably wouldnt use this
     public static void RemovePerson(string personID)
     {
         //establish DB connection---------------------
