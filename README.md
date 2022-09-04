@@ -37,3 +37,6 @@ The healthier and happier a person is, the more they will contribute to populati
 When population growth reaches a certain threshhold, a new person is added to the population.
 The threshhold grows as population grows.
 [temp] They start off with 0 money and lowest possible skill and 50 health and 50 happiness.
+
+Player Actoins:
+Work in progress
