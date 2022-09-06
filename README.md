@@ -19,11 +19,14 @@ Both elements change as the game progresses based on law of scarcity.
 Production:
 Production is done in buildings.
 Buildings hire workers and buy ingredients from other buildings to produce goods. These make up the total cost.
-Base amount produced by a worker is predetermined. This can be increased by efficiency: skilled workers and better gear.
+Each type of goods have different amounts of labor required for one unit of production.
+Base labor produced by a worker is predetermined. This can be increased by efficiency: skilled workers and better gear.
+Amount produced is (total labor) / (labor per unit). The leftovers are carried over to next day.
 The selling price of the produced good is determined by (total cost) / (number produced) + premium.
 Premium is increaed and decreased based on sales. If sales are good, increase. If not, decrease til 0.
 If premium is 0 and still not good sales, decrease wage.
 [temp] Asking price for ingredients are based on past average sales.
+[temp] Unsold items are refunded as ingredients.
 
 Population:
 People are the economic agents that generate labor and consumption.
@@ -39,4 +42,7 @@ The threshhold grows as population grows.
 [temp] They start off with 0 money and lowest possible skill and 50 health and 50 happiness.
 
 Player Actoins:
-Work in progress
+Build new buildings.
+Build infrastructure.
+Adjust tax level. Income tax, import tax, export tax
+Pass laws. Minimum wage, fixed prices for certain goods, immigration laws.
