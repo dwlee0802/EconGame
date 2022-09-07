@@ -1,7 +1,7 @@
 # EconGame
 An economics inspired personal game dev project.
 
-Market behavior:
+Market behavior:\n
 No generic predetermined prices for goods.
 Goods are transferred in the market through transactions.
 A transaction happens between two economic agents. One is the buyer and the other is the seller.
@@ -41,8 +41,14 @@ When population growth reaches a certain threshhold, a new person is added to th
 The threshhold grows as population grows.
 [temp] They start off with 0 money and lowest possible skill and 50 health and 50 happiness.
 
+Trade:
+Movement of goods between provinces.
+It is conducted by merchants. Merchants also have needs and consumption. They have access to price information across provinces.
+
 Player Actoins:
 Build new buildings.
 Build infrastructure.
 Adjust tax level. Income tax, import tax, export tax
-Pass laws. Minimum wage, fixed prices for certain goods, immigration laws.
+Pass laws. Minimum wage, fixed prices for certain goods (increase availability, but reduce investment), immigration laws.
+Make trade agreements with other nations.
+Engage in trade.
