@@ -39,7 +39,7 @@ public class TableColumns
         Premium,
         Level,
         AverageIngredientCost,
-        ProductionStockpile,
+        LaborStockpile,
         LastSales
     }
 

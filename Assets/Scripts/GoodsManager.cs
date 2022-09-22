@@ -31,11 +31,11 @@ public class GoodsManager
         //strength, intelligence, personability
 
         //bread
-        new float[] { 0.6f, 0.2f, 0.2f},
+        new float[] { 1f, 0.5f, 0.5f},
         //meat
-        new float[] { 0.6f, 0.2f, 0.2f},
+        new float[] { 2f, 1f, 0.5f},
         //wheat
-        new float[] { 0.6f, 0.2f, 0.2f}
+        new float[] { 1f, 0.5f, 0.5f}
     };
 
     //how much one ingredient is converted to the product
@@ -47,6 +47,17 @@ public class GoodsManager
         2,
         //wheat
         4
+    };
+
+    //how much one ingredient is converted to the product
+    public static int[] goodsLaborPerUnit = new int[3]
+    {
+        //bread
+        2,
+        //meat
+        2,
+        //wheat
+        1
     };
 
     //How much utility a certain good type provides when one more of that good is added. Good count x 11. Current value is rounded to the nearest tenth.

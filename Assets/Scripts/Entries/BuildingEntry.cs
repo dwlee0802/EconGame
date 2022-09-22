@@ -19,7 +19,7 @@ public class BuildingEntry
     //per one
     float averageIngredientCost;
 
-    float productionStockpile;
+    float laborStockpile;
 
     int lastSales;
     
@@ -82,9 +82,9 @@ public class BuildingEntry
         return ingredientStockpile;
     }
 
-    public float getProductionStockpile()
+    public float getLaborStockpile()
     {
-        return productionStockpile;
+        return laborStockpile;
     }
 
     public int getLastSales()
@@ -92,7 +92,7 @@ public class BuildingEntry
         return lastSales;
     }
 
-    public BuildingEntry(string iD, string province, int type, float budget = 0, float wage = 0, int ingredientStockpile = 0, float premium = 0, int level = 1, float productionStockpile = 0, float averageIngredientCost = 0, int lastSales = 0)
+    public BuildingEntry(string iD, string province, int type, float budget = 0, float wage = 0, int ingredientStockpile = 0, float premium = 0, int level = 1, float laborStockpile = 0, float averageIngredientCost = 0, int lastSales = 0)
     {
         ID = iD;
         this.province = province;
@@ -102,7 +102,7 @@ public class BuildingEntry
         this.ingredientStockpile = ingredientStockpile;
         this.premium = premium;
         this.level = level;
-        this.productionStockpile = productionStockpile;
+        this.laborStockpile = laborStockpile;
         this.averageIngredientCost = averageIngredientCost;
         this.lastSales = lastSales;
     }

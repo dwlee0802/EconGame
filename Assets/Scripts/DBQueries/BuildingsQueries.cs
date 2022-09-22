@@ -55,7 +55,7 @@ public class BuildingsQueries
                 rdr.GetInt32(((int)TableColumns.BuildingColumns.IngredientStockpile)),
                 rdr.GetFloat(((int)TableColumns.BuildingColumns.Premium)),
                 rdr.GetInt32(((int)TableColumns.BuildingColumns.Level)),
-                rdr.GetFloat(((int)TableColumns.BuildingColumns.ProductionStockpile)),
+                rdr.GetFloat(((int)TableColumns.BuildingColumns.LaborStockpile)),
                 rdr.GetFloat(((int)TableColumns.BuildingColumns.AverageIngredientCost)),
                 rdr.GetInt32(((int)TableColumns.BuildingColumns.LastSales))
                 );
@@ -105,7 +105,7 @@ public class BuildingsQueries
                 rdr.GetInt32(((int)TableColumns.BuildingColumns.IngredientStockpile)),
                 rdr.GetFloat(((int)TableColumns.BuildingColumns.Premium)),
                 rdr.GetInt32(((int)TableColumns.BuildingColumns.Level)),
-                rdr.GetFloat(((int)TableColumns.BuildingColumns.ProductionStockpile)),
+                rdr.GetFloat(((int)TableColumns.BuildingColumns.LaborStockpile)),
                 rdr.GetFloat(((int)TableColumns.BuildingColumns.AverageIngredientCost)),
                 rdr.GetInt32(((int)TableColumns.BuildingColumns.LastSales))
             );
@@ -301,7 +301,7 @@ public class BuildingsQueries
         Debug.Log(string.Format("{0}'s average ingredient cost was changed by {1}", buildingID, byAmount));
     }
 
-    public static void SetProductionStockpile(string buildingID, float amount)
+    public static void SetLaborStockpile(string buildingID, float amount)
     {
         //establish DB connection---------------------
         IDbConnection dbConnection;
@@ -316,7 +316,7 @@ public class BuildingsQueries
 
         IDbCommand newcmd;
         newcmd = dbConnection.CreateCommand();
-        string str = "UPDATE Buildings SET ProductionStockpile = (@amount) WHERE ID = (@buildingID)";
+        string str = "UPDATE Buildings SET LaborStockpile = (@amount) WHERE ID = (@buildingID)";
         newcmd.CommandText = str;
 
         var parameter1 = newcmd.CreateParameter();

@@ -73,52 +73,66 @@ public class GameManager : MonoBehaviour
 
     private int Production(BuildingEntry building)
     {
+        //base amount of labor a person generates without any modifiers
+        int goodType = building.getGoodType();
+        int baselabor = 4;
         float ingredientStock = building.getIngredientStockpile();
-        float productionStock = building.getProductionStockpile();
+        float laborStock = building.getLaborStockpile();
         List<PersonEntry> employees = PeopleQueries.GetAllEmployees(building.getID());
+        float[] skillModifiers = GoodsManager.skillModifiers[goodType];
+        int unitlabor = GoodsManager.goodsLaborPerUnit[goodType];
 
         if (GoodsManager.ProductIngredientDict[building.getGoodType()] < 0)
         {
             ingredientStock = 1;
         }
 
+        float weightedAvgDenom = 0;
+
         foreach (PersonEntry employee in employees)
         {
-            productionStock += employee.getStrength() * GoodsManager.skillModifiers[building.getGoodType()][0]
-                + employee.getIntelligence() * GoodsManager.skillModifiers[building.getGoodType()][1]
-                + employee.getPersonability() * GoodsManager.skillModifiers[building.getGoodType()][2];
+            //output labor is modified by their skills
+            //labor output = 4 * avg(1 + str * modifier + int * modifier + psn * modifier)
+            //example 1: if a good has str as its modifier, a worker with 1.5 strength will produce 1.5 more than 1
+            //example 2: if a good takes str and int as its modifiers and takes str twice as important, labor output would be 4 * ((str * 2 + int * 1) / 3)
+
+            weightedAvgDenom = 0;
+            //str
+            weightedAvgDenom += skillModifiers[0];
+            //int
+            weightedAvgDenom += skillModifiers[1];
+            //psn
+            weightedAvgDenom += skillModifiers[2];
+
+            laborStock += baselabor * ((employee.getStrength() * skillModifiers[0] + employee.getIntelligence() * skillModifiers[1] + employee.getPersonability() * skillModifiers[2]) / weightedAvgDenom);
         }
 
         int count = 0;
 
         //check if there's enough ingredients in stock
-        while(ingredientStock >= 1 && productionStock >= 1)
+        //ingredients are consumed one on one
+        while(ingredientStock >= 1 && laborStock >= unitlabor)
         {
-            productionStock -= 1;
             ingredientStock -= 1;
+            laborStock -= unitlabor;
 
-            count += 1 * GoodsManager.goodsProductionRatio[building.getGoodType()];
+            count += 1;
 
+            //if the building type does not have an ingredient
             if(GoodsManager.ProductIngredientDict[building.getGoodType()] < 0)
             {
                 ingredientStock = 1;
             }
+            //subtract from ingredient stockpile as used.
+            else
+            {
+                BuildingsQueries.ChangeIngredientStock(building.getID(), -1);
+            }
         }
 
-        if(productionStock > building.getLevel() * 2)
-        {
-            productionStock = building.getLevel() * 2;
-        }
+        BuildingsQueries.SetLaborStockpile(building.getID(), laborStock);
 
-        if (GoodsManager.ProductIngredientDict[building.getGoodType()] >= 0)
-        {
-            BuildingsQueries.ChangeIngredientStock(building.getID(), -count/GoodsManager.goodsProductionRatio[building.getGoodType()]);
-        }
-
-
-        BuildingsQueries.SetProductionStockpile(building.getID(), productionStock);
-
-        Debug.Log(string.Format("Building {0} produced {1} of {2}", building.getID(), count, GoodsManager.TypeToNameDict[building.getGoodType()]));
+        //Debug.Log(string.Format("Building {0} produced {1} of {2}", building.getID(), count, GoodsManager.TypeToNameDict[building.getGoodType()]));
 
         return count;
     }
@@ -535,7 +549,7 @@ public class GameManager : MonoBehaviour
 
             foreach (int i in removeIndex)
             {
-                Debug.Log(buyerPersons[i - offset].getID() + " was removed");
+                //Debug.Log(buyerPersons[i - offset].getID() + " was removed");
                 buyerPersons.RemoveAt(i - offset);
                 offset++;
             }
@@ -550,6 +564,18 @@ public class GameManager : MonoBehaviour
                     sellOrderEmpty = false;
                     break;
                 }   
+            }
+        }
+
+        //check for unsold items and refund them 
+        for(int i = 0; i < GoodsManager.GoodCount; i++)
+        {
+            if(sellOrders[i].Count != 0)
+            {
+                foreach(MarketOrder unsold in sellOrders[i])
+                {
+                    BuildingsQueries.ChangeIngredientStock(unsold.originBuilding.getID(), 1);
+                }    
             }
         }
     }
