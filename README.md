@@ -1,7 +1,7 @@
 # EconGame
 An economics inspired personal game dev project.
 
-Market behavior:
+Market behavior:  
 No generic predetermined prices for goods.
 Goods are transferred in the market through transactions.
 A transaction happens between two economic agents. One is the buyer and the other is the seller.
@@ -10,22 +10,25 @@ Transaction matching works in a way that maximizes sales: cheaper goods are boug
 When not enough goods are available, the poorest bidder gets the good since richer people can probably buy something else.
 [temp] Prioritizing poor/rich might be changed to the opposite or into an option after testing.
 
-Economic Agents behavior:
+Economic Agents behavior:  
 Economic agents decide on which goods they want more, and how much they want that for.
 Each good provides the agent with utility such as health, happiness, or ingredients for production.
 The agents calculate how much it is worth by (total util provided) * (price per util)
 Both elements change as the game progresses based on law of scarcity.
 
-Production:
+Production:  
 Production is done in buildings.
 Buildings hire workers and buy ingredients from other buildings to produce goods. These make up the total cost.
-Base amount produced by a worker is predetermined. This can be increased by efficiency: skilled workers and better gear.
+Each type of goods have different amounts of labor required for one unit of production.
+Base labor produced by a worker is predetermined. This can be increased by efficiency: skilled workers and better gear.
+Amount produced is (total labor) / (labor per unit). The leftovers are carried over to next day.
 The selling price of the produced good is determined by (total cost) / (number produced) + premium.
 Premium is increaed and decreased based on sales. If sales are good, increase. If not, decrease til 0.
 If premium is 0 and still not good sales, decrease wage.
 [temp] Asking price for ingredients are based on past average sales.
+[temp] Unsold items are refunded as ingredients.
 
-Population:
+Population:  
 People are the economic agents that generate labor and consumption.
 They purchase goods from the market to gain health and happiness.
 How much utility a good provides depends on the peorson's current standing: Better off people want different stuff than worse off people.
@@ -37,3 +40,15 @@ The healthier and happier a person is, the more they will contribute to populati
 When population growth reaches a certain threshhold, a new person is added to the population.
 The threshhold grows as population grows.
 [temp] They start off with 0 money and lowest possible skill and 50 health and 50 happiness.
+
+Trade:  
+Movement of goods between provinces.
+It is conducted by merchants. Merchants also have needs and consumption. They have access to price information across provinces.
+
+Player Actoins:  
+Build new buildings.
+Build infrastructure.
+Adjust tax level. Income tax, import tax, export tax
+Pass laws. Minimum wage, fixed prices for certain goods (increase availability, but reduce investment), immigration laws.
+Make trade agreements with other nations.
+Engage in trade.
