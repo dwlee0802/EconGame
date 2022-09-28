@@ -208,7 +208,7 @@ public class BuildingsQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s ingredient stockpile was changed by {1} and is now {2}", buildingID, byAmount, GetBuilding(buildingID).getIngredientStockpile()));
+        //Debug.Log(string.Format("{0}'s ingredient stockpile was changed by {1} and is now {2}", buildingID, byAmount, GetBuilding(buildingID).getIngredientStockpile()));
 
         dbConnection.Close();
     }
@@ -248,7 +248,7 @@ public class BuildingsQueries
         newcmd.ExecuteNonQuery();
         dbConnection.Close();
 
-        Debug.Log(string.Format("{0}'s ingredient stockpile was set to {1}", buildingID, byAmount));
+        //Debug.Log(string.Format("{0}'s ingredient stockpile was set to {1}", buildingID, byAmount));
     }
 
     public static void ChangeAverageIngredientCost(string buildingID, float byAmount)
@@ -298,7 +298,54 @@ public class BuildingsQueries
 
         dbConnection.Close();
 
-        Debug.Log(string.Format("{0}'s average ingredient cost was changed by {1}", buildingID, byAmount));
+        //Debug.Log(string.Format("{0}'s average ingredient cost was changed by {1}", buildingID, byAmount));
+    }
+
+    public static void ChangeIngredientCost(string buildingID, float byAmount)
+    {
+        if (byAmount == 0)
+        {
+            return;
+        }
+
+        //establish DB connection---------------------
+        IDbConnection dbConnection;
+        string dbname = "GameDatabase.db";
+        string currentPath = System.IO.Path.GetDirectoryName(Application.dataPath);
+        currentPath = currentPath + "\\" + dbname;
+        //Debug.Log("Database file path: " + currentPath);
+        dbConnection = new SqliteConnection("URI=file:" + currentPath);
+        dbConnection.Open();
+        //--------------------------------------------
+
+        BuildingEntry building = GetBuilding(buildingID);
+
+        if (building.getIngredientStockpile() + byAmount > building.getLevel() * 2)
+        {
+            SetIngredientStock(buildingID, building.getLevel() * 2);
+            return;
+        }
+
+        IDbCommand newcmd;
+        newcmd = dbConnection.CreateCommand();
+        string str = "UPDATE Buildings SET AverageIngredientCost = AverageIngredientCost + (@amount) WHERE ID = (@buildingID)";
+        newcmd.CommandText = str;
+
+        var parameter1 = newcmd.CreateParameter();
+        parameter1.ParameterName = "@amount";
+        parameter1.Value = byAmount;
+        newcmd.Parameters.Add(parameter1);
+
+        var parameter2 = newcmd.CreateParameter();
+        parameter2.ParameterName = "@buildingID";
+        parameter2.Value = buildingID;
+        newcmd.Parameters.Add(parameter2);
+
+        newcmd.ExecuteNonQuery();
+
+        //Debug.Log(string.Format("{0}'s ingredient stockpile was changed by {1} and is now {2}", buildingID, byAmount, GetBuilding(buildingID).getIngredientStockpile()));
+
+        dbConnection.Close();
     }
 
     public static void SetLaborStockpile(string buildingID, float amount)
@@ -379,7 +426,7 @@ public class BuildingsQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s wage was changed by {1} and is now {2}", buildingID, byAmount, GetBuilding(buildingID).getWage()));
+        //Debug.Log(string.Format("{0}'s wage was changed by {1} and is now {2}", buildingID, byAmount, GetBuilding(buildingID).getWage()));
 
         dbConnection.Close();
     }
@@ -420,7 +467,7 @@ public class BuildingsQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s last amount was changed by {1}", buildingID, byAmount));
+        //Debug.Log(string.Format("{0}'s last amount was changed by {1}", buildingID, byAmount));
 
         dbConnection.Close();
     }
@@ -489,16 +536,17 @@ public class BuildingsQueries
         int returncode = 1;
 
         //wage cannot go under zero
-        if (building.getWage() + byAmount < 0)
+        if (building.getPremium() + byAmount < 0)
         {
             str = "UPDATE Buildings SET Premium = (@amount) WHERE ID = (@buildingID)";
             parameter1.Value = 0;
+            newcmd.CommandText = str;
             returncode = -1;
         }
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s Premium was changed by {1} and is now {2}", buildingID, byAmount, GetBuilding(buildingID).getPremium()));
+        //Debug.Log(string.Format("{0}'s Premium was changed by {1} and is now {2}", buildingID, byAmount, GetBuilding(buildingID).getPremium()));
 
         dbConnection.Close();
 

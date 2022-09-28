@@ -330,7 +330,7 @@ public class PeopleQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s health was changed by {1}", personID, byAmount));
+        //Debug.Log(string.Format("{0}'s health was changed by {1}", personID, byAmount));
 
         ChangeGainedHealth(personID, byAmount);
 
@@ -391,7 +391,7 @@ public class PeopleQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s happiness was changed by {1}", personID, byAmount));
+        //Debug.Log(string.Format("{0}'s happiness was changed by {1}", personID, byAmount));
 
         ChangeGainedHappiness(personID, byAmount);
 
@@ -433,7 +433,7 @@ public class PeopleQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s gained health was changed by {1}", personID, byAmount));
+        //Debug.Log(string.Format("{0}'s gained health was changed by {1}", personID, byAmount));
 
         dbConnection.Close();
     }
@@ -474,7 +474,7 @@ public class PeopleQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s gained happiness was changed by {1}", personID, byAmount));
+        //Debug.Log(string.Format("{0}'s gained happiness was changed by {1}", personID, byAmount));
 
         dbConnection.Close();
     }
@@ -505,7 +505,7 @@ public class PeopleQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s population's gained values were reset to 0.", provinceID));
+        //Debug.Log(string.Format("{0}'s population's gained values were reset to 0.", provinceID));
 
         dbConnection.Close();
     }
@@ -542,7 +542,7 @@ public class PeopleQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s price per happiness was changed by {1}", personID, byAmount));
+        //Debug.Log(string.Format("{0}'s price per happiness was changed by {1}", personID, byAmount));
 
         dbConnection.Close();
     }
@@ -579,7 +579,7 @@ public class PeopleQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s price per health was changed by {1}", personID, byAmount));
+        //Debug.Log(string.Format("{0}'s price per health was changed by {1}", personID, byAmount));
 
         dbConnection.Close();
     }
@@ -630,7 +630,7 @@ public class PeopleQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s strength was changed by {1}", personID, byAmount));
+        //Debug.Log(string.Format("{0}'s strength was changed by {1}", personID, byAmount));
 
         dbConnection.Close();
     }
@@ -681,7 +681,7 @@ public class PeopleQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s Intelligence was changed by {1}", personID, byAmount));
+        //Debug.Log(string.Format("{0}'s Intelligence was changed by {1}", personID, byAmount));
 
         dbConnection.Close();
     }
@@ -707,7 +707,7 @@ public class PeopleQueries
         var parameter1 = newcmd.CreateParameter();
         parameter1.ParameterName = "@Personability";
 
-        if (person.getIntelligence() + byAmount < 0)
+        if (person.getPersonability() + byAmount < 0)
         {
             //set as 0
             string str = "UPDATE People SET Personability = (@Personability) WHERE ID = (@personID)";
@@ -732,7 +732,57 @@ public class PeopleQueries
 
         newcmd.ExecuteNonQuery();
 
-        Debug.Log(string.Format("{0}'s Personability was changed by {1}", personID, byAmount));
+        //Debug.Log(string.Format("{0}'s Personability was changed by {1}", personID, byAmount));
+
+        dbConnection.Close();
+    }
+
+    //sets skill. 0: str, 1: int, 2: psn
+    public static void SetSkill(string personID, int skilltype, float byAmount)
+    {
+        //establish DB connection---------------------
+        IDbConnection dbConnection;
+        string dbname = "GameDatabase.db";
+        string currentPath = System.IO.Path.GetDirectoryName(Application.dataPath);
+        currentPath = currentPath + "\\" + dbname;
+        //Debug.Log("Database file path: " + currentPath);
+        dbConnection = new SqliteConnection("URI=file:" + currentPath);
+        dbConnection.Open();
+        //--------------------------------------------
+
+
+        IDbCommand newcmd;
+        newcmd = dbConnection.CreateCommand();
+        string str = "UPDATE People SET Strength = (@byAmount) WHERE ID = (@personID)";
+
+        if (skilltype == 0)
+        {
+            str = "UPDATE People SET Strength = (@byAmount) WHERE ID = (@personID)";
+        }
+        else if(skilltype == 1)
+        {
+            str = "UPDATE People SET Intelligence = (@byAmount) WHERE ID = (@personID)";
+        }
+        else if(skilltype == 2)
+        {
+            str = "UPDATE People SET Personability = (@byAmount) WHERE ID = (@personID)";
+        }
+
+        newcmd.CommandText = str;
+
+        var parameter1 = newcmd.CreateParameter();
+        parameter1.ParameterName = "@byAmount";
+        parameter1.Value = byAmount;
+        newcmd.Parameters.Add(parameter1);
+
+        var parameter2 = newcmd.CreateParameter();
+        parameter2.ParameterName = "@personID";
+        parameter2.Value = personID;
+        newcmd.Parameters.Add(parameter2);
+
+        newcmd.ExecuteNonQuery();
+
+        //Debug.Log(string.Format("{0}'s employer was set to {1}", personID, buildingID));
 
         dbConnection.Close();
     }

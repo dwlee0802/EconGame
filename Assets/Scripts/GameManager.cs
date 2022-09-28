@@ -6,9 +6,7 @@ using Mono.Data.Sqlite;
 using System.IO;
 
 /* Current Status
- * -Need to come up with how to change parameters for next day
- * -More efficient best good selection
- * -refund resources for unsold stuff
+ * come up with better algorithm for pricing, wage determination, and desired wage
  */
 
 public class GameManager : MonoBehaviour
@@ -20,15 +18,13 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         uiManager = GetComponent<UIManager>();
-
-        ProcessDay();
     }
 
 
     //called when the player presses the pass day button. calculates the activity in the game world.
     public void ProcessDay()
     {
-        
+        uiManager.NextTurn();
         Debug.Log("Process Day");
         OperateLaborMarket("PV1");
         OperateMarket("PV1");
@@ -109,10 +105,18 @@ public class GameManager : MonoBehaviour
 
         int count = 0;
 
+        int loop = 0;
         //check if there's enough ingredients in stock
         //ingredients are consumed one on one
         while(ingredientStock >= 1 && laborStock >= unitlabor)
         {
+            loop++;
+            if (loop > 100)
+            {
+                Debug.LogError("here");
+                break;
+            }
+
             ingredientStock -= 1;
             laborStock -= unitlabor;
 
@@ -130,9 +134,9 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        BuildingsQueries.SetLaborStockpile(building.getID(), laborStock);
+        BuildingsQueries.SetLaborStockpile(building.getID(), 0);
 
-        //Debug.Log(string.Format("Building {0} produced {1} of {2}", building.getID(), count, GoodsManager.TypeToNameDict[building.getGoodType()]));
+        Debug.Log(string.Format("Building {0} produced {1} of {2}", building.getID(), count, GoodsManager.TypeToNameDict[building.getGoodType()]));
 
         return count;
     }
@@ -332,11 +336,31 @@ public class GameManager : MonoBehaviour
 
         List<MarketOrder>[] buyOrders;
 
+        int loop = 0;
+
         //with the sell order list, make transactions until:
         //1. sell order is empty
         //2. no buyers left
         while (!sellOrderEmpty && (buyerBuildings.Count > 0 || buyerPersons.Count > 0))
         {
+            loop++;
+            if (loop > 100)
+            {
+                Debug.LogError("here");
+                break;
+            }
+
+            Debug.LogError("buyercount: " + buyerPersons.Count + " + " + buyerBuildings.Count);
+
+            if(buyerBuildings.Count <= 0)
+            {
+                break;
+            }
+            if(buyerPersons.Count <= 0)
+            {
+                break;
+            }
+
             buyOrders = new List<MarketOrder>[GoodsManager.GoodCount];
             for (int i = 0; i < GoodsManager.GoodCount; i++)
             {
@@ -521,7 +545,6 @@ public class GameManager : MonoBehaviour
             {
                 if(buyerPersons[i].lastGainedHealth >= 10 && buyerPersons[i].lastGainedHappiness >= 10)
                 {
-                    Debug.Log("exit 1");
                     removeIndex.Add(i);
                 }
                 else
@@ -541,7 +564,7 @@ public class GameManager : MonoBehaviour
                     }
                     if(somethingtobuy == false)
                     {
-                        Debug.Log("exit 2");
+                        //Debug.Log("exit 2");
                         removeIndex.Add(i);
                     }
                 }
@@ -644,6 +667,8 @@ public class GameManager : MonoBehaviour
 
     private void OperateLaborMarket(string provinceID)
     {
+        int employment = 0;
+
         List<BuildingEntry> buildings = BuildingsQueries.GetAllBuildings(provinceID);
         List<PersonEntry> people = PeopleQueries.GetAllPeople(provinceID);
 
@@ -686,6 +711,7 @@ public class GameManager : MonoBehaviour
             {
                 PeopleQueries.SetEmployer(people[i].getID(), building.getID());
                 lastremovedindex = i;
+                employment++;
             }
 
             for(int i = lastremovedindex; i >= 0; i-- )
@@ -693,6 +719,8 @@ public class GameManager : MonoBehaviour
                 people.RemoveAt(i);
             }
         }
+
+        Debug.Log("Employed " + employment.ToString());
     }
 
     private float PayWages(BuildingEntry building)
@@ -722,7 +750,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        Debug.Log(string.Format("total wage paid by {0} is {1}", building.getID(), total));
+        //Debug.Log(string.Format("total wage paid by {0} is {1}", building.getID(), total));
 
         return total;
     }
@@ -783,13 +811,22 @@ public class GameManager : MonoBehaviour
                     //decrease premium. if it is already zero, the fuction fails and returns -1
                     if (BuildingsQueries.ChangePremium(building.getID(), -1) < 0)
                     {
-                        BuildingsQueries.ChangeWage(building.getID(), -1);
+                        BuildingsQueries.ChangeWage(building.getID(), 1);
                     }
                 }
                 //sold all - increase premium
                 else
                 {
                     BuildingsQueries.ChangePremium(building.getID(), 1);
+                }
+            }
+
+            //not enough ingredients?
+            if(building.getIngredientStockpile() < building.getLevel() * 2)
+            {
+                if(building.getAverageIngredientCost() > 0)
+                {
+                    BuildingsQueries.ChangeIngredientCost(building.getID(), 1);
                 }
             }
         }
@@ -839,20 +876,58 @@ public class GameManager : MonoBehaviour
             //if the value is already at 1.5 then the experience is wasted
             //if the person is unemployed, skill is decreased
 
+            float naturalexp = 1.5f;
+
             if(person.getEmployer() == "NULL")
             {
                 //reduce skills
-                PeopleQueries.ChangeStrength(person.getID(), -0.1f);
-                PeopleQueries.ChangeIntelligence(person.getID(), -0.1f);
-                PeopleQueries.ChangePersonability(person.getID(), -0.1f);
+                PeopleQueries.ChangeStrength(person.getID(), -0.033f);
+                PeopleQueries.ChangeIntelligence(person.getID(), -0.033f/3);
+                PeopleQueries.ChangePersonability(person.getID(), -0.033f/3);
             }
             else
             {
                 float[] modifiers = GoodsManager.skillModifiers[BuildingsQueries.GetBuilding(person.getEmployer()).getGoodType()];
                 //raise skills based on the appropriate skills
-                PeopleQueries.ChangeStrength(person.getID(), 0.1f * modifiers[0]);
-                PeopleQueries.ChangeIntelligence(person.getID(), 0.1f * modifiers[1]);
-                PeopleQueries.ChangePersonability(person.getID(), 0.1f * modifiers[2]);
+                //divide up 0.1 according to how much it is important in its current job
+                //dont go over natural experience cap
+                float sum = modifiers[0] + modifiers[1] + modifiers[2];
+                float skillnum = 0;
+                for (int i = 0; i < 3; i++)
+                {
+                    if(i == 0)
+                    {
+                        skillnum = person.getStrength();
+                    }
+                    else if(i == 1)
+                    {
+                        skillnum = person.getIntelligence();
+                    }
+                    else
+                    {
+                        skillnum = person.getPersonability();
+                    }
+
+                    if(skillnum + 0.1f * modifiers[0] / sum > naturalexp)
+                    {
+                        PeopleQueries.SetSkill(person.getID(), i, naturalexp);
+                    }
+                    else
+                    {
+                        if(i == 0)
+                        {
+                            PeopleQueries.ChangeStrength(person.getID(), 0.1f * modifiers[0] / sum);
+                        }
+                        else if(i == 1)
+                        {
+                            PeopleQueries.ChangeIntelligence(person.getID(), 0.1f * modifiers[1] / sum);
+                        }
+                        else
+                        {
+                            PeopleQueries.ChangePersonability(person.getID(), 0.1f * modifiers[2] / sum);
+                        }
+                    }
+                }
             }
         }
     }
@@ -862,7 +937,7 @@ public class GameManager : MonoBehaviour
         //controls population growth
         //each person generates growth points based on their life status
         //calculates next required growth point for population increase
-        //formula is (pop count) * (2 + (pop count)/10 ) multiplier capped at 4
+        //formula for next pop increase req is (pop count) * 8
         //add a new person to the province if growth point is met
         //subtract from growth point and carry left over to next day
         //if leftover is enough for another growth, repeat
@@ -878,11 +953,11 @@ public class GameManager : MonoBehaviour
 
         while(true)
         {
-            if(gainedGrowth >= popCount * (2 + popCount/10))
+            if(gainedGrowth >= popCount * 8)
             {
                 //pops dont get removed, so use popcount to make new ID
                 popCount++;
-                gainedGrowth -= popCount * (2 + popCount / 10);
+                gainedGrowth -= popCount * 8;
                 PeopleQueries.AddPerson(new PersonEntry("PP" + popCount.ToString(), provinceID));
             }
             else

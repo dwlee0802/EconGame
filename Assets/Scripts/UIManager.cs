@@ -38,10 +38,20 @@ public class UIManager : MonoBehaviour
 
     private void Awake()
     {
-        for(int i = 0; i < GoodsManager.GoodCount; i++)
+        InitializeTransactionHistory();
+    }
+
+    private void InitializeTransactionHistory()
+    {
+        for (int i = 0; i < GoodsManager.GoodCount; i++)
         {
             transactionHistory[i] = new List<TransactionEntry>();
         }
+    }
+
+    public void NextTurn()
+    {
+        InitializeTransactionHistory();
     }
 
     public void ChangeProvinceView(int viewIndex)
@@ -150,7 +160,7 @@ public class UIManager : MonoBehaviour
 
     public void InputTransactionHistory(int goodtype, string buyerID, string sellerID, float price)
     {
-        Debug.Log("UI Manager logged transaction with type " + GoodsManager.TypeToNameDict[goodtype] + " of price " + price);
+        //Debug.Log("UI Manager logged transaction with type " + GoodsManager.TypeToNameDict[goodtype] + " of price " + price);
         transactionHistory[goodtype].Add(new TransactionEntry(goodtype, buyerID, sellerID, price));
     }
 
