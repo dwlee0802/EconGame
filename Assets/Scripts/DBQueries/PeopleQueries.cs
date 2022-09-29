@@ -330,7 +330,7 @@ public class PeopleQueries
 
         newcmd.ExecuteNonQuery();
 
-        //Debug.Log(string.Format("{0}'s health was changed by {1}", personID, byAmount));
+        Debug.Log(string.Format("{0}'s health was changed by {1}", personID, byAmount));
 
         ChangeGainedHealth(personID, byAmount);
 
@@ -376,7 +376,7 @@ public class PeopleQueries
         }
         else
         {
-            string str = "UPDATE People SET Happiness = Health + (@happiness) WHERE ID = (@personID)";
+            string str = "UPDATE People SET Happiness = Happiness + (@happiness) WHERE ID = (@personID)";
             newcmd.CommandText = str;
 
             parameter1.Value = byAmount;
@@ -474,7 +474,7 @@ public class PeopleQueries
 
         newcmd.ExecuteNonQuery();
 
-        //Debug.Log(string.Format("{0}'s gained happiness was changed by {1}", personID, byAmount));
+        Debug.Log(string.Format("{0}'s gained happiness was changed by {1}", personID, byAmount));
 
         dbConnection.Close();
     }

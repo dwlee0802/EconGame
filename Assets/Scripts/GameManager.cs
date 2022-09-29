@@ -30,7 +30,7 @@ public class GameManager : MonoBehaviour
         OperateMarket("PV1");
         DayReflection("PV1");
         PopulationGrowth("PV1");
-        DailyDeduction("PV1");
+        //DailyDeduction("PV1");
         
     }
 
@@ -168,134 +168,6 @@ public class GameManager : MonoBehaviour
         return new MarketOrder(GoodsManager.ProductIngredientDict[building.getGoodType()], askingPrice, building.getID());
     }
 
-    
-    //Operates the market for a single province.
-    private void OperateMarket_old(string provinceID)
-    {
-        //make an array of lists that will hold market orders by each good type.
-        List<MarketOrder>[] buyOrders = new List<MarketOrder>[GoodsManager.GoodCount];
-        for(int i = 0; i < GoodsManager.GoodCount; i++)
-        {
-            buyOrders[i] = new List<MarketOrder>();
-        }
-        List<MarketOrder>[] sellOrders = new List<MarketOrder>[GoodsManager.GoodCount];
-        for (int i = 0; i < GoodsManager.GoodCount; i++)
-        {
-            sellOrders[i] = new List<MarketOrder>();
-        }
-
-        //make a list of people who are participating in the market
-        //participating means that their needs are not met and they have money
-
-        //fill buy order from people
-        foreach (PersonEntry person in PeopleQueries.GetAllPeople(provinceID))
-        {
-
-            MarketOrder currentMarketOrder = GenerateBuyOrderPerson(person);
-
-            buyOrders[currentMarketOrder.Goodtype].Add(currentMarketOrder);
-        }
-
-        //fill buy order and sell order from buildings
-        foreach(BuildingEntry building in BuildingsQueries.GetAllBuildings(provinceID))
-        {
-
-            foreach(MarketOrder order in GenerateSellOrder(building))
-            {
-                sellOrders[order.Goodtype].Add(order);
-            }
-        }
-
-        //Sort each market order lists. Buy orders from highest to lowest, sell orders from lowest to highest.
-        for(int i = 0; i < GoodsManager.GoodCount; i++)
-        {
-            buyOrders[i].Sort((y, x) => x.AskingPrice.CompareTo(y.AskingPrice));
-        }
-        for (int i = 0; i < GoodsManager.GoodCount; i++)
-        {
-            sellOrders[i].Sort((x, y) => x.AskingPrice.CompareTo(y.AskingPrice));
-        }
-
-        //Check for transaction opportunities. If two orders have the same good type and the sell order's asking price is lower than the buy order's, exchange.
-        for(int i = 0; i < GoodsManager.GoodCount; i++)
-        {
-            Debug.Log(string.Format("Operate market for good type {0}", GoodsManager.TypeToNameDict[i]));
-            Debug.Log(string.Format("{0} buy orders and {1} sell orders", buyOrders[i].Count, sellOrders[i].Count));
-
-
-            int transactioncount = 0;
-
-            int smallercount = buyOrders[i].Count;
-                
-            if(smallercount > sellOrders[i].Count)
-            {
-                smallercount = sellOrders[i].Count;
-            }
-
-            for(int j = 0; j < smallercount; j++)
-            {
-                Debug.Log(string.Format("Checking transaction between buy order for {0} and sell order for {1}", buyOrders[i][j].AskingPrice, sellOrders[i][j].AskingPrice));
-
-                if(sellOrders[i][j].AskingPrice <= buyOrders[i][j].AskingPrice)
-                {
-                    //exchange goods and money.
-                    //access the buyer and subtract the asking price of the sell order. give him the good type specified.
-                    //access the seller and add money to it.
-                    //remove both orders from the list.
-                    MarketOrder order = sellOrders[i][j];
-
-                    string buyerFirstTwo = (buyOrders[i][j].OriginID[0].ToString() + buyOrders[i][j].OriginID[1].ToString());
-
-                    BuildingEntry seller = BuildingsQueries.GetBuilding(sellOrders[i][j].OriginID);
-
-                    transactioncount++;
-
-                    if (buyerFirstTwo == "PP")
-                    {
-                        PersonEntry buyer = PeopleQueries.GetPerson(buyOrders[i][j].OriginID); 
-                        
-                        if (buyer.getMoney() >= order.AskingPrice)
-                        {
-                            PeopleQueries.ChangeMoney(buyer.getID(), (-1) * order.AskingPrice);
-                            PeopleQueries.ChangeHealth(buyer.getID(), GoodsManager.CalculateHealthGain(order.Goodtype, buyer.getHealth()));
-                            PeopleQueries.ChangeHappiness(buyer.getID(), GoodsManager.CalculateHappinessGain(order.Goodtype, buyer.getHappiness()));
-                        
-                            BuildingsQueries.ChangeMoney(seller.getID(), order.AskingPrice);
-
-                        }
-                    }
-                    else if(buyerFirstTwo == "BD")
-                    {
-                        BuildingEntry buyer = BuildingsQueries.GetBuilding(buyOrders[i][j].OriginID);
-
-                        if (buyer.getBudget() >= order.AskingPrice)
-                        {
-                            BuildingsQueries.ChangeMoney(buyer.getID(), (-1) * order.AskingPrice);
-                            BuildingsQueries.ChangeAverageIngredientCost(buyer.getID(), order.AskingPrice);
-                            BuildingsQueries.ChangeIngredientStock(buyer.getID(), 1);
-                            
-                            BuildingsQueries.ChangeMoney(seller.getID(), order.AskingPrice);
-
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogError("Neither person nor building. who tf r u");
-                    }
-                }
-                else
-                {
-                    Debug.Log(string.Format("End checking for transactions for {0}", GoodsManager.TypeToNameDict[i]));
-                    break;
-                }
-            }
-
-            Debug.LogWarning(string.Format("{0} transactions made for {1}. ", transactioncount, GoodsManager.TypeToNameDict[i]));
-        }
-        
-
-    }
-
     private void OperateMarket(string provinceID)
     {
         //make an array of lists that will hold market orders by each good type.
@@ -350,7 +222,7 @@ public class GameManager : MonoBehaviour
                 break;
             }
 
-            Debug.LogError("buyercount: " + buyerPersons.Count + " + " + buyerBuildings.Count);
+            //Debug.LogError("buyercount: " + buyerPersons.Count + " + " + buyerBuildings.Count);
 
             if(buyerBuildings.Count <= 0)
             {
