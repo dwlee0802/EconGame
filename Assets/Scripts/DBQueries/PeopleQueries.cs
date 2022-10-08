@@ -358,7 +358,7 @@ public class PeopleQueries
         var parameter1 = newcmd.CreateParameter();
         parameter1.ParameterName = "@happiness";
 
-        if (person.getHealth() + byAmount > 100)
+        if (person.getHappiness() + byAmount > 100)
         {
             //set as 100
             string str = "UPDATE People SET Happiness = (@happiness) WHERE ID = (@personID)";
@@ -366,7 +366,7 @@ public class PeopleQueries
 
             parameter1.Value = 100;
         }
-        else if (person.getHealth() + byAmount < 0)
+        else if (person.getHappiness() + byAmount < 0)
         {
             //set as 0
             string str = "UPDATE People SET Happiness = (@happiness) WHERE ID = (@personID)";

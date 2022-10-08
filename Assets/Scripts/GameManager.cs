@@ -30,8 +30,7 @@ public class GameManager : MonoBehaviour
         OperateMarket("PV1");
         DayReflection("PV1");
         PopulationGrowth("PV1");
-        //DailyDeduction("PV1");
-        
+        DailyDeduction("PV1");
     }
 
 
@@ -838,6 +837,19 @@ public class GameManager : MonoBehaviour
                 break;
             }
         }
+    }
+
+    public void MakeNewProductionBuilding(string province, int type)
+    {
+        int buildingcount = BuildingsQueries.GetBuildingCount(province) + 1;
+
+        //need way to generate unique IDs for buildings
+        //brainstorming: keep a list of deleted buildings' IDs and use them up til its empty
+        //try catch the sql error and keep adding 1 to the ID
+
+        BuildingEntry newbuilding = new BuildingEntry("BD" + buildingcount.ToString(), province, type, 1000, 3, 0, 0, 1, 0, 10, 0);
+
+        BuildingsQueries.AddProductionBuilding(newbuilding);
     }
 }
 

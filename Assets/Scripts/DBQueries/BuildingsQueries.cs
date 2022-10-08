@@ -68,6 +68,39 @@ public class BuildingsQueries
         return outputList;
     }
 
+    public static int GetBuildingCount(string provinceID)
+    {
+        //establish DB connection---------------------
+        IDbConnection dbConnection;
+        string dbname = "GameDatabase.db";
+        string currentPath = System.IO.Path.GetDirectoryName(Application.dataPath);
+        currentPath = currentPath + "\\" + dbname;
+        //Debug.Log("Database file path: " + currentPath);
+        dbConnection = new SqliteConnection("URI=file:" + currentPath);
+        dbConnection.Open();
+        //--------------------------------------------
+
+        //execute query
+        IDbCommand newcmd;
+        newcmd = dbConnection.CreateCommand();
+        string str = "SELECT Count(*) FROM Buildings WHERE Province = (@buildingID)";
+        newcmd.CommandText = str;
+
+        var parameter = newcmd.CreateParameter();
+        parameter.ParameterName = "@buildingID";
+        parameter.Value = provinceID;
+        newcmd.Parameters.Add(parameter);
+
+        IDataReader rdr = newcmd.ExecuteReader();
+
+        int output = int.Parse(rdr.GetValue(0).ToString());
+
+        dbConnection.Close();
+
+        return output;
+
+    }
+
     public static BuildingEntry GetBuilding(string buildingID)
     {
         //establish DB connection---------------------
@@ -553,4 +586,87 @@ public class BuildingsQueries
         return returncode;
     }
 
+    public static void AddProductionBuilding(BuildingEntry building)
+    {
+
+        //establish DB connection---------------------
+        IDbConnection dbConnection;
+        string dbname = "GameDatabase.db";
+        string currentPath = System.IO.Path.GetDirectoryName(Application.dataPath);
+        currentPath = currentPath + "\\" + dbname;
+        //Debug.Log("Database file path: " + currentPath);
+        dbConnection = new SqliteConnection("URI=file:" + currentPath);
+        dbConnection.Open();
+        //--------------------------------------------
+
+
+        IDbCommand newcmd;
+        newcmd = dbConnection.CreateCommand();
+        string str = "INSERT INTO Buildings VALUES ((@param1), (@param2), (@param3), (@param4), (@param5), (@param6), (@param7), (@param8), (@param9), (@param10), (@param12), (@param13))";
+        newcmd.CommandText = str;
+
+        var param1 = newcmd.CreateParameter();
+        param1.ParameterName = "@param1";
+        param1.Value = building.getID();
+        newcmd.Parameters.Add(param1);
+
+        var param2 = newcmd.CreateParameter();
+        param2.ParameterName = "@param2";
+        param2.Value = building.getProvince();
+        newcmd.Parameters.Add(param2);
+
+        var param3 = newcmd.CreateParameter();
+        param3.ParameterName = "@param3";
+        param3.Value = building.getGoodType();
+        newcmd.Parameters.Add(param3);
+
+        var param4 = newcmd.CreateParameter();
+        param4.ParameterName = "@param4";
+        param4.Value = "NULL";
+        newcmd.Parameters.Add(param4);
+
+        var param5 = newcmd.CreateParameter();
+        param5.ParameterName = "@param5";
+        param5.Value = building.getBudget();
+        newcmd.Parameters.Add(param5);
+
+        var param6 = newcmd.CreateParameter();
+        param6.ParameterName = "@param6";
+        param6.Value = building.getWage();
+        newcmd.Parameters.Add(param6);
+
+        var param7 = newcmd.CreateParameter();
+        param7.ParameterName = "@param7";
+        param7.Value = building.getIngredientStockpile();
+        newcmd.Parameters.Add(param7);
+
+        var param8 = newcmd.CreateParameter();
+        param8.ParameterName = "@param8";
+        param8.Value = building.getPremium();
+        newcmd.Parameters.Add(param8);
+
+        var param9 = newcmd.CreateParameter();
+        param9.ParameterName = "@param9";
+        param9.Value = building.getLevel();
+        newcmd.Parameters.Add(param9);
+
+        var param10 = newcmd.CreateParameter();
+        param10.ParameterName = "@param10";
+        param10.Value = building.getAverageIngredientCost();
+        newcmd.Parameters.Add(param10);
+
+        var param12 = newcmd.CreateParameter();
+        param12.ParameterName = "@param12";
+        param12.Value = building.getLaborStockpile();
+        newcmd.Parameters.Add(param12);
+
+        var param13 = newcmd.CreateParameter();
+        param13.ParameterName = "@param13";
+        param13.Value = building.getLastSales();
+        newcmd.Parameters.Add(param13);
+
+        newcmd.ExecuteNonQuery();
+        Debug.Log(string.Format("new building was added.\n{0}", building));
+        dbConnection.Close();
+    }
 }

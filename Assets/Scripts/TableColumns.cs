@@ -9,6 +9,10 @@ public class TableColumns
     //-add here
     //-update entries initializers and getters
     //-update queries for both single get and all get
+    
+    //to do list
+    //last production
+    //last profit
 
     public enum PeopleColumns
     {

@@ -9,6 +9,8 @@ public class UIManager : MonoBehaviour
      * To do list:
      * Add growth from previous day
      */
+    GameManager gameManager;
+
     [SerializeField]
     GameObject provinceMenuPanel;
 
@@ -17,27 +19,39 @@ public class UIManager : MonoBehaviour
 
     string currentProvinceID = "PV1";
 
-    //overview view holds important information from other views in one place. Index 0
+    //projects are the constructions and etc currently ongoing in the province. Index 0
     [SerializeField]
-    GameObject overviewView;
+    GameObject projectView;
+
     //demographics view shows the information about people in the province. Index 1
     [SerializeField]
     GameObject demographicsView;
+
     //industry view shows information about buildings in the province. Index 2
     [SerializeField]
     GameObject industryView;
+
     //market view shows good transactions made within the province. Index 3
     [SerializeField]
     GameObject marketView;
+
     [SerializeField]
     Dropdown marketGoodtypeDropdown;
     [SerializeField]
     GameObject transactionEntryPrefab;
 
+    [SerializeField]
+    Dropdown buildingGoodtypeDropdown;
+
     List<TransactionEntry>[] transactionHistory = new List<TransactionEntry>[GoodsManager.GoodCount];
+
+    [SerializeField]
+    GameObject buildingEntryUIPrefab;
+
 
     private void Awake()
     {
+        gameManager = GetComponent<GameManager>();
         InitializeTransactionHistory();
     }
 
@@ -56,7 +70,7 @@ public class UIManager : MonoBehaviour
 
     public void ChangeProvinceView(int viewIndex)
     {
-        overviewView.SetActive(false);
+        projectView.SetActive(false);
         demographicsView.SetActive(false);
         industryView.SetActive(false);
         marketView.SetActive(false);
@@ -64,8 +78,8 @@ public class UIManager : MonoBehaviour
         switch(viewIndex)
         {
             case 0:
-                overviewView.SetActive(true);
-                LoadOverviewView();
+                projectView.SetActive(true);
+                LoadProjectsView();
                 break;
             case 1:
                 demographicsView.SetActive(true);
@@ -82,7 +96,13 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    void LoadOverviewView()
+    public void MakeNewProductionBuilding()
+    {
+        int forgoodtype = marketGoodtypeDropdown.value;
+        gameManager.MakeNewProductionBuilding(currentProvinceID, forgoodtype);
+    }
+
+    void LoadProjectsView()
     {
 
     }
@@ -126,7 +146,48 @@ public class UIManager : MonoBehaviour
 
     void LoadIndustryView()
     {
+        Transform transactionsContent = industryView.transform.GetChild(5).GetChild(0).GetChild(0);
+        int filtertype = industryView.transform.GetChild(0).GetChild(0).GetComponent<Dropdown>().value;
 
+        //clear content
+        int childcount = transactionsContent.childCount;
+        for (int i = 0; i < childcount; i++)
+        {
+            Destroy(transactionsContent.GetChild(childcount - 1 - i).gameObject);
+        }
+
+        foreach (BuildingEntry building in BuildingsQueries.GetAllBuildings(currentProvinceID))
+        {
+            if(filtertype != 0 && building.getGoodType() != filtertype - 1)
+            {
+                continue;
+            }
+
+            GameObject newEntry = Instantiate(buildingEntryUIPrefab);
+
+            //set building level
+            newEntry.transform.GetChild(0).GetChild(0).GetComponent<Text>().text = building.getID();
+
+            //set building total produced count
+            newEntry.transform.GetChild(0).GetChild(0).GetComponent<Text>().text = "00";
+
+            //set building last sales
+            newEntry.transform.GetChild(2).GetComponent<Text>().text = building.getLastSales().ToString();
+
+            //set building profit
+            newEntry.transform.GetChild(3).GetComponent<Text>().text = "00";
+
+            //set building budget
+            newEntry.transform.GetChild(4).GetComponent<Text>().text = building.getBudget().ToString();
+
+            //set building employment
+            newEntry.transform.GetChild(5).GetComponent<Text>().text = PeopleQueries.GetEmployeeCount(building.getID()).ToString();
+
+            //set building wage
+            newEntry.transform.GetChild(6).GetComponent<Text>().text = building.getWage().ToString();
+
+            newEntry.transform.SetParent(transactionsContent);
+        }
     }
 
     public void LoadMarketView()
